@@ -130,6 +130,12 @@ with open ("/projects/tewhey-lab/mourik/MPRAduo_Hannah/output/%s/matched_all.txt
                                     matched_all_oligo.write("%s^%s\t^\n" % (g,k))
                                     no_oligo_match += 1
                                     SeqIO.write(record, no_match_oligo, "fastq")
+                            if lib_A_index == 0 and lib_AiP_index > 0 or lib_A_index > 0 and lib_AiP_index == 0:
+                                count_duo_no_match += 1
+                                SeqIO.write(record, no_match_duo, "fastq")
+                            if lib_P_index == 0 and lib_PiA_index > 0 or lib_P_index > 0 and lib_PiA_index == 0:
+                                count_duo_no_match += 1
+                                SeqIO.write(record, no_match_duo, "fastq")
                             if lib_P_index == 0 and lib_A_index == 0 and lib_PiA_index == 0 and lib_AiP_index == 0:
                                 count_duo_no_match += 1
                                 SeqIO.write(record, no_match_duo, "fastq")
