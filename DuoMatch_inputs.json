@@ -1,0 +1,17 @@
+{
+  "DuoMatch.read_a": "File",
+  "DuoMatch.read_b": "File",
+  "DuoMatch.reference_fasta": "File",
+  "DuoMatch.read_b_number": "Int",
+  "DuoMatch.seq_min": "Int",
+  "DuoMatch.working_directory": "String",
+  "DuoMatch.id_out": "String",
+  "DuoMatch.link_A_bc": "String",
+  "DuoMatch.link_P_bc": "String",
+  "DuoMatch.link_1_bc": "String",
+  "DuoMatch.link_2_bc": "String",
+  "DuoMatch.link_A_oligo": "String",
+  "DuoMatch.link_P_oligo": "String",
+  "DuoMatch.end_A_oligo": "String",
+  "DuoMatch.end_P_oligo": "String"
+}
