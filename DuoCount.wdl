@@ -88,7 +88,7 @@ task associate {
   String working_directory
   String sample_id
   command {
-    perl ${working_directory}/associate_tags.pl ${matched} ${parsed} ${sample_id}.tag ${read_b_number}
+    perl ${working_directory}/associate_tags_duo.pl ${matched} ${parsed} ${sample_id}.tag ${read_b_number}
     }
   output {
     File outF="${sample_id}.tag"
