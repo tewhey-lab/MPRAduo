@@ -71,7 +71,7 @@ with open("%s.match" % out_dir, "w") as match:
                                     seq_only = str(seq_only)
     # print(seq_only[0:11])
                                     UMI_end = 'CATGTC'
-    # Here E stands for enhancers, previous runs had that as plasmid A. S represents silencers, plasmid P in previous runs
+    # Here E is associated with plasmid A, and S is associated with plasmid P
                                     ES_indic = 'CGATCTCA'
                                     SE_indic = 'GTTTCTAG'
                                     link_E = 'CGCCGA'
