@@ -52,7 +52,7 @@ task prep_counts {
   String working_directory
   String sample_id
   command {
-    python ${working_directory}/Library_sep_single.py ${sample_fastq} ${parsed_E} ${parsed_S} ${sample_id}
+    python ${working_directory}/library_separation_FLASH2_input.v2.py ${sample_fastq} ${parsed_E} ${parsed_S} ${sample_id}
     }
   output {
     File out="${sample_id}.match"
