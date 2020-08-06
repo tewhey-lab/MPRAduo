@@ -92,7 +92,7 @@ task make_count_table {
   String? flags = ""
   String id_out
   command {
-    perl ${working_directory}/compile_bc.pl ${flags} ${list_inFile} ${id_out}.count
+    perl ${working_directory}/compile_bc_duo.pl ${flags} ${list_inFile} ${id_out}.count
     }
   output {
     File out="${id_out}.count"
