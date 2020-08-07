@@ -212,7 +212,7 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                     #     break
 
 print("%s seconds" % (time.time() - start_time))
-with open ("%s/%s/statistics.txt"  % (current_path, out_dir), "w") as run_stats:
+with open ("%s_statistics.txt"  %  out_dir, "w") as run_stats:
     run_stats.write("Total Records Checked: %f \n" % float(i))
     run_stats.write("Percent Matched to Library: %f \n" % float(1-((count_duo_no_match+count_single_no_match)/i)))
     run_stats.write("Percent Duo Matched: %f \n" % float(1-(count_duo_no_match/count_duo)))
