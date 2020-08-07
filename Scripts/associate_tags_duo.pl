@@ -16,7 +16,6 @@ my $tags = $ARGV[0]; #matched tag file
 my $out = $ARGV[1];
 my $read = $ARGV[2];
 
-open (ENHANCERS, "$enhancers") or die("ERROR: can not read file ($enhancers): $!\n");
 open (OUT, ">$out") or die("ERROR: can not create $out: $!\n");
 
 my @inline;
