@@ -48,7 +48,7 @@ foreach $sample_ID (@ordered_list){
 		$oligo=$inline[2];
 		$library=$inline[3]
 
-		if($oligo !~ "*"){
+		if($oligo !~ m/*/){
 			die "Barcode & Sample combination seen twice\n" if(exists $counts{$barcode}{$sample_ID});
 
 			$counts{$barcode}{$sample_ID}=$bc_ct;
