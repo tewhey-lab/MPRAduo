@@ -88,7 +88,7 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                         count_single += 1
                                         if link_E in seq_only[fill_start+19:fill_start+28]:
                                             lib_E_index = seq_only.index(link_E)
-                                        elif link_S in seq_only[fill_start+19:fill_start+28]:
+                                        if link_S in seq_only[fill_start+19:fill_start+28]:
                                             lib_S_index = seq_only.index(link_S)
                                         if lib_S_index > 0 and lib_E_index == 0:
                                             count_single_S += 1
@@ -96,23 +96,23 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                             if g in libS_dict:
                                                 perfect_oligo.write("%s\t%s\n" % (g,libS_dict[g]))
                                                 fmatch.write("%s\t%s\t%s\tS\n" % (record.name,g,libS_dict[g]))
-                                            elif g not in libS_dict:
+                                            if g not in libS_dict:
                                                 # matched_all_oligo.write("%s\n" % g)
                                                 no_oligo_match += 1
                                                 count_single_S_no_match += 1
                                                 SeqIO.write(record, no_match_oligo, "fastq")
-                                        elif lib_E_index > 0 and lib_S_index == 0:
+                                        if lib_E_index > 0 and lib_S_index == 0:
                                             count_single_E += 1
                                             k = seq_only[lib_E_index+6:lib_E_index+16]
                                             if k in libE_dict:
                                                 perfect_oligo.write("%s\t%s\n" % (k, libE_dict[k]))
                                                 fmatch.write("%s\t%s\t%s\tE\n" % (record.name,k,libE_dict[k]))
-                                            elif k not in libE_dict:
+                                            if k not in libE_dict:
                                                 # matched_all_oligo.write("%s\n" % k)
                                                 no_oligo_match += 1
                                                 count_single_E_no_match += 1
                                                 SeqIO.write(record, no_match_oligo, "fastq")
-                                        elif lib_S_index == 0 and lib_E_index == 0:
+                                        if lib_S_index == 0 and lib_E_index == 0:
                                             count_single_no_match += 1
                                             SeqIO.write(record, no_match_single, "fastq")
                                     if len(seq_only[fill_start:]) >= 110:
@@ -129,20 +129,20 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                             lib_S_index = seq_only.index(link_S)
                                             check_S_index = 1
                                             # count_duo_AiP += 1
-                                        elif link_E in seq_only[fill_start+19:fill_start+31]:
+                                        if link_E in seq_only[fill_start+19:fill_start+31]:
                                             lib_E_index = seq_only.index(link_E)
                                             check_E_index = 1
                                         if link_E in seq_only[lib_S_index+55:lib_S_index+67]:
                                             seq_only_ES = seq_only[lib_S_index+55:]
                                             lib_ES_index = seq_only_ES.index(link_E)
                                             check_ES_index = 1
-                                        elif link_S in seq_only[lib_E_index+45:lib_E_index+57]:
+                                        if link_S in seq_only[lib_E_index+45:lib_E_index+57]:
                                             seq_only_SE = seq_only[lib_E_index+45:]
                                             lib_SE_index = seq_only_SE.index(link_S)
                                             check_SE_index = 1
                                         if (check_E_index == 0 and check_SE_index == 1) or (check_E_index == 1 and check_SE_index == 0):
                                             check_E_index = -1
-                                        elif (check_S_index == 0 and check_ES_index == 1) or (check_S_index == 1 and check_ES_index == 0):
+                                        if (check_S_index == 0 and check_ES_index == 1) or (check_S_index == 1 and check_ES_index == 0):
                                             check_S_index = -1
                                         if lib_S_index > 0 and lib_ES_index > 0:
                                             count_duo_ES += 1
@@ -152,22 +152,22 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                                 count_duo_ES_both += 1
                                                 perfect_oligo.write("%s^%s\t%s^%s\n" % (k,g,libE_dict[k],libS_dict[g]))
                                                 fmatch.write("%s\t%s^%s\t%s^%s\tES\n" % (record.name,k,g,libE_dict[k],libS_dict[g]))
-                                            elif g in libS_dict and k not in libE_dict:
+                                            if g in libS_dict and k not in libE_dict:
                                                 partial_oligo.write("%s\t%s\t%s\t-\n" % (k,g,libS_dict[g]))
                                                 SeqIO.write(record, partial_fastq, "fastq")
                                                 count_duo_ES_no_E += 1
                                                 # matched_all_oligo.write("%s^%s\t%s^\n" % (g,k,libA_dict[g]))
-                                            elif g not in libS_dict and k in libE_dict:
+                                            if g not in libS_dict and k in libE_dict:
                                                 partial_oligo.write("%s\t%s\t-\t%s\n" % (k,g,libE_dict[k]))
                                                 SeqIO.write(record, partial_fastq, "fastq")
                                                 # matched_all_oligo.write("%s^%s\t^%s\n" % (g,k,libP_dict[k]))
                                                 count_duo_ES_no_S += 1
-                                            elif g not in libS_dict and k not in libE_dict:
+                                            if g not in libS_dict and k not in libE_dict:
                                                 # matched_all_oligo.write("%s^%s\t^\n" % (g,k))
                                                 no_oligo_match += 1
                                                 count_duo_ES_no_oligo += 1
                                                 SeqIO.write(record, no_match_oligo, "fastq")
-                                        elif lib_E_index > 0 and lib_SE_index > 0:
+                                        if lib_E_index > 0 and lib_SE_index > 0:
                                             count_duo_SE += 1
                                             g = seq_only[lib_E_index+6:lib_E_index+16]
                                             k = seq_only_SE[lib_SE_index+6:lib_SE_index+26]
@@ -175,17 +175,17 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                                 count_duo_SE_both += 1
                                                 perfect_oligo.write("%s^%s\t%s^%s\n" % (k,g,libS_dict[k],libE_dict[g]))
                                                 fmatch.write("%s\t%s^%s\t%s^%s\tSE\n" % (record.name,k,g,libS_dict[k],libE_dict[g]))
-                                            elif g in libE_dict and k not in libS_dict:
+                                            if g in libE_dict and k not in libS_dict:
                                                 partial_oligo.write("%s\t%s\t%s\t-\n" % (k,g,libE_dict[g]))
                                                 SeqIO.write(record, partial_fastq, "fastq")
                                                 count_duo_SE_no_S += 1
                                                 # matched_all_oligo.write("%s^%s\t%s^\n" % (g,k,libP_dict[g]))
-                                            elif g not in libE_dict and k in libS_dict:
+                                            if g not in libE_dict and k in libS_dict:
                                                 partial_oligo.write("%s\t%s\t-\t%s\n" % (k,g,libS_dict[k]))
                                                 SeqIO.write(record, partial_fastq, "fastq")
                                                 count_duo_SE_no_E += 1
                                                 # matched_all_oligo.write("%s^%s\t^%s\n" % (g,k,libA_dict[k]))
-                                            elif g not in libE_dict and k not in libS_dict:
+                                            if g not in libE_dict and k not in libS_dict:
                                                 # matched_all_oligo.write("%s^%s\t^\n" % (g,k))
                                                 no_oligo_match += 1
                                                 count_duo_SE_no_oligo += 1
@@ -195,12 +195,12 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                             count_duo_no_match_ES += 1
                                             count_duo_ES += 1
                                             SeqIO.write(record, no_match_duo, "fastq")
-                                        elif check_E_index == -1 and check_S_index == 1:
+                                        if check_E_index == -1 and check_S_index == 1:
                                             count_duo_no_match += 1
                                             count_duo_no_match_SE += 1
                                             count_duo_SE += 1
                                             SeqIO.write(record, no_match_duo, "fastq")
-                                        elif check_S_index == -1 and check_E_index == -1:
+                                        if check_S_index == -1 and check_E_index == -1:
                                             count_duo_no_match += -1
                                         # if lib_P_index == 0 and lib_A_index == 0 and lib_PiA_index == 0 and lib_AiP_index == 0:
                                         #     count_duo_no_match += 1
