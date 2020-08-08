@@ -46,7 +46,7 @@ foreach $sample_ID (@ordered_list){
 		$barcode=$inline[0];
 		$bc_ct=$inline[1];
 		$oligo=$inline[2];
-		$library=$inline[3]
+		$library=$inline[3];
 
 		if($oligo !~ /\*/){
 			if(exists $counts{$barcode}{$sample_ID}){

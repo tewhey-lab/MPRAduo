@@ -25,7 +25,6 @@ workflow ReplicateCount {
     call associate { input:
                         working_directory=working_directory,
                         matched=prep_counts.out,
-                        parsed=parsed,
                         read_b_number=read_b_number,
                         sample_id=replicate.left
                       }
@@ -61,12 +60,11 @@ task prep_counts {
 task associate {
   #File assoc
   File matched
-  File parsed
   Int read_b_number
   String working_directory
   String sample_id
   command {
-    perl ${working_directory}/associate_tags_duo.pl ${matched} ${parsed} ${sample_id}.tag ${read_b_number}
+    perl ${working_directory}/associate_tags_duo.pl ${matched} ${sample_id}.tag ${read_b_number}
     }
   output {
     File outF="${sample_id}.tag"

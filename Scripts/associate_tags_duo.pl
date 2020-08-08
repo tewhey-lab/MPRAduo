@@ -30,8 +30,8 @@ while (<TAGS>){
 	@inline = split("\t");
 
   ${$tags{$inline[1]}}[0]++; #count
-	${$tags{$inline[1]}}[2] = $inline[2]; #oligo
-	${$tags{$inline[1]}}[4] = $inline[3]; #library assingment
+	${$tags{$inline[1]}}[1] = $inline[2]; #oligo
+	${$tags{$inline[1]}}[2] = $inline[3]; #library assingment
 
 }
 close TAGS;
