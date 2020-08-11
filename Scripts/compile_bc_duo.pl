@@ -70,7 +70,7 @@ foreach $sample_ID (@ordered_list){
 print STDERR "Writing file\n";
 
 open (OUT, ">$out") or die("ERROR: can not create $out: $!\n");
-print OUT "Barcode\tOligo\tLibrary\t";
+print OUT "Barcode\tOligo\tlibrary\t";
 print OUT join ("\t",@ordered_list)."\n";
 
 my $cur_bc;
