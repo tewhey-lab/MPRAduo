@@ -6,6 +6,7 @@ import sys
 import re
 import time
 import pathlib
+import gzip
 argv = sys.argv
 
 from Bio.Alphabet import IUPAC
@@ -55,6 +56,13 @@ count_duo_SE_both = 0
 count_duo_ES = 0
 count_duo_ES_both = 0
 no_oligo_match = 0
+
+def open_by_suffix(filename):
+    if filename.endswith('.gz'):
+        return gzip.open(filename, 'rt')
+    else:
+        return open(filename,'rt')
+        
 # Open write files and begin parsing the fastq file
 with open("%s.match" % out_dir, "w") as fmatch:
     with open("%s_perfect_match.txt" % out_dir, "w") as perfect_oligo:
@@ -63,10 +71,10 @@ with open("%s.match" % out_dir, "w") as fmatch:
                 with open("%s_single_no_match.fastq" % out_dir, "w") as no_match_single:
                     with open("%s_duo_no_match.fastq" % out_dir, "w") as no_match_duo:
                         with open("%s_oligo_no_match.fastq" % out_dir, "w") as no_match_oligo:
-                            with open(fastqfile, "rt") as handle:
+                            with open_by_suffix(fastqfile) as handle:
                                 for record in SeqIO.parse(handle, "fastq"):
-    # Identify the read and set GFP_end to the appropriate 8 base identifier
-    # If it is read 1, reverse the read
+# Identify the read and set GFP_end to the appropriate 8 base identifier
+# If it is read 1, reverse the read
                                     seq_only = record.seq
                                     seq_only = seq_only.reverse_complement()
                                     seq_only = str(seq_only)
