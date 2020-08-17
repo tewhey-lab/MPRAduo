@@ -10,7 +10,6 @@ workflow ReplicateCount {
   File parsed_S
   File parsed_E
   Int read_b_number
-  String flags
   String id_out
   String working_directory
 
@@ -38,7 +37,6 @@ workflow ReplicateCount {
   call make_count_table { input:
                             working_directory=working_directory,
                             list_inFile=make_infile.out,
-                            flags=flags,
                             id_out=id_out
                           }
 }
@@ -87,10 +85,9 @@ task make_count_table {
   #File compile
   File list_inFile
   String working_directory
-  String? flags = ""
   String id_out
   command {
-    perl ${working_directory}/compile_bc_duo.pl ${flags} ${list_inFile} ${id_out}.count
+    perl ${working_directory}/compile_bc_duo.pl ${list_inFile} ${id_out}.count
     }
   output {
     File out="${id_out}.count"

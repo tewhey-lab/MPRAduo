@@ -1,0 +1,10 @@
+{
+  "ReplicateCount.parsed_E": "File",
+  "ReplicateCount.parsed_S": "File",
+  "ReplicateCount.read_a": "Array[File]",
+  "ReplicateCount.replicate_id": "Array[String]",
+  "ReplicateCount.read_b_number": "Int",
+  "ReplicateCount.id_out": "String",
+  "ReplicateCount.working_directory": "String"
+}
+

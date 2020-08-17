@@ -62,7 +62,7 @@ def open_by_suffix(filename):
         return gzip.open(filename, 'rt')
     else:
         return open(filename,'rt')
-        
+
 # Open write files and begin parsing the fastq file
 with open("%s.match" % out_dir, "w") as fmatch:
     with open("%s_perfect_match.txt" % out_dir, "w") as perfect_oligo:
@@ -80,8 +80,8 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                     seq_only = str(seq_only)
     # print(seq_only[0:11])
                                     GFP_end = 'AATAATA'
-                                    link_S = 'TCTAGA'
-                                    link_E = 'CTGACT'
+                                    link_E = 'TCTAGA'
+                                    link_S = 'CTGACT'
     # Find the end of the GFP read in the sequence line
                                     if GFP_end in seq_only:
                                         match = seq_only.index(GFP_end)
@@ -219,6 +219,15 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                     # if i > 550:
                                     #     break
 
+if count_duo_ES == 0:
+    count_duo_ES = -1
+if count_duo_SE == 0:
+    count_duo_SE = -1
+if count_single_E == 0:
+    count_single_E = -1
+if count_single_S == 0:
+    count_single_S = -1
+
 print("%s seconds" % (time.time() - start_time))
 with open ("%s_statistics.txt"  %  out_dir, "w") as run_stats:
     run_stats.write("Total Records Checked: %f \n" % float(i))
@@ -230,5 +239,5 @@ with open ("%s_statistics.txt"  %  out_dir, "w") as run_stats:
     run_stats.write("Percent E into S Mis-Match: %f\t%f\t%f\n" % (float(count_duo_no_match_SE/count_duo_SE), float(count_duo_no_match_SE), float(count_duo_SE)))
     run_stats.write("Single E: \n \tPercent Oligos Matched: %f\n \tPercent Oligos Not Matched: %f\n" % (float(1-(count_single_E_no_match/count_single_E)), float(count_single_E_no_match/count_single_E)))
     run_stats.write("Single S: \n \tPercent Oligos Matched: %f\n \tPercent Oligos Not Matched: %f\n" % (float(1-(count_single_S_no_match/count_single_S)), float(count_single_S_no_match/count_single_S)))
-    run_stats.write("E into S: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_SE_both/count_duo_SE), float(count_duo_SE_no_oligo/count_duo_SE), float(count_duo_SE_no_S/count_duo_SE), float(count_duo_SE_no_E/count_duo_SE)))
-    run_stats.write("S into E: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_ES_both/count_duo_ES), float(count_duo_ES_no_oligo/count_duo_ES), float(count_duo_ES_no_S/count_duo_ES), float(count_duo_ES_no_E/count_duo_ES)))
+    run_stats.write("SE: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_SE_both/count_duo_SE), float(count_duo_SE_no_oligo/count_duo_SE), float(count_duo_SE_no_S/count_duo_SE), float(count_duo_SE_no_E/count_duo_SE)))
+    run_stats.write("ES: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_ES_both/count_duo_ES), float(count_duo_ES_no_oligo/count_duo_ES), float(count_duo_ES_no_S/count_duo_ES), float(count_duo_ES_no_E/count_duo_ES)))
