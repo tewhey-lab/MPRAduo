@@ -1,6 +1,6 @@
 ### MPRAduo
 
-# *An application of Massively Parallel Reporter Assays (MPRA) to determine the effect of silencers within the genome.*
+## *An application of Massively Parallel Reporter Assays (MPRA) to determine the effect of silencers within the genome.*
 
 The set of pipelines and scripts outlined below are used for matching the oligos and barcodes, counting the sequenced duo barcodes, and a set of functions in R that can be used to effectively analyze the count output.
 
