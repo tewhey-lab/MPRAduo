@@ -36,6 +36,8 @@ The set of pipelines and scripts outlined below are used for matching the oligos
 
 _DuoMatch.wdl_
 
+![Grpaphical Pipeline](graphics/DuoMatch_pipeline.png?raw=true "DuoMatch Graphical Pipeline")
+
 Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (FLASH2), and pulls the barcode, oligo and UMI (*map_barcodes_duo.pl*). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (minimap2) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (*SAM2MPRA.pl*), and then counted (*Ct_seq.pl*) and parsed (*parse_map.pl*)
 
 An example inputs file can be found in this repository, and a description of each of the inputs required can be found below:
