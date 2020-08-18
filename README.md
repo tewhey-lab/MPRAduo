@@ -66,6 +66,8 @@ An example inputs file can be found in this repository, and a description of eac
 
 _DuoCount.wdl_ and _DuoCountSingle.wdl_
 
+![Graphical Pipeline](graphics/DuoCount_pipeline.png?raw-true "DuoCount Graphical Pipeline")
+
 These two pipelines are virtually identical, the only difference is that DuoCount.wdl is for paired end reads and DuoCountSingle.wdl is for single end reads, both are expecting ~150bp reads. Read 1 (and read 2, if paired end reads) fastq files and the associated replicate IDs are passed to the pipeline (*library_separation_FLASH2_input.py*) along with the dictionary files created by _DuoMatch.wdl_ to have the libraries sorted; single and duo libraries are separated and then identified as E,S,ES, or SE. The matched file, containing the record name, barcode, matched oligo, and the assigned library, for each replicate is formatted (*associate_tags_duo.pl*) and passed to a script (*compile_bc_duo.pl*) to assemble the information into a barcode level count table.
 
 An example of the inputs file for each version of the script can be found in the repository, an example of the paired end inputs file can be found below:
