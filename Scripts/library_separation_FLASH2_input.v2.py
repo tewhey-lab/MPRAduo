@@ -21,12 +21,6 @@ out_dir = argv[4]
 
 start_time = time.time()
 
-current_path = os.getcwd()
-
-p = pathlib.Path('%s/%s' % (current_path, out_dir))
-if p.exists() == False and p.is_dir() == False:
-    os.mkdir(p)
-
 #create lists of the bar codes for each library
 BC_E = pd.read_table(dictE, header=None, index_col=False, usecols=[0,1])
 BC_S = pd.read_table(dictS, header=None, index_col=False, usecols=[0,1])
