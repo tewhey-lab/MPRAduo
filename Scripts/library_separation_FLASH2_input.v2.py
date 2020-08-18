@@ -35,6 +35,7 @@ libE_dict = dict(zip(BC_E[0], BC_E[1]))
 libS_dict = dict(zip(BC_S[0], BC_S[1]))
 
 i=0
+no_gfp = 0
 count_single_no_match = 0
 count_single_E_no_match = 0
 count_single_S_no_match = 0
@@ -87,6 +88,7 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                         match = seq_only.index(GFP_end)
                                     else:
                                         match = 0
+                                        no_gfp += 1
                                     fill_start = match
     # Split the sequences up by the lenght in relation to the GFP_end, less than 110
     # bases to the end of the sequence is a single
@@ -209,7 +211,7 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                             count_duo_SE += 1
                                             SeqIO.write(record, no_match_duo, "fastq")
                                         if check_S_index == -1 and check_E_index == -1:
-                                            count_duo_no_match += -1
+                                            count_duo_no_match += 1
                                         # if lib_P_index == 0 and lib_A_index == 0 and lib_PiA_index == 0 and lib_AiP_index == 0:
                                         #     count_duo_no_match += 1
                                             SeqIO.write(record, no_match_duo, "fastq")
@@ -230,7 +232,8 @@ if count_single_S == 0:
 
 print("%s seconds" % (time.time() - start_time))
 with open ("%s_statistics.txt"  %  out_dir, "w") as run_stats:
-    run_stats.write("Total Records Checked: %f \n" % float(i))
+    run_stats.write("Total Records Checked: %d \n" % i)
+    run_stats.write("Total Records GFP not Found: %d \n" % no_gfp)
     run_stats.write("Percent Matched to Library: %f \n" % float(1-((count_duo_no_match+count_single_no_match)/i)))
     run_stats.write("Percent Duo Matched: %f \n" % float(1-(count_duo_no_match/count_duo)))
     run_stats.write("Percent Single Matched: %f \n" % float(1-(count_single_no_match/count_single)))
