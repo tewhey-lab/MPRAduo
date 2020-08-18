@@ -193,7 +193,7 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                                     count_duo_SE_no_S += 1
                                                     # matched_all_oligo.write("%s^%s\t%s^\n" % (g,k,libP_dict[g]))
                                                 if g not in libE_dict and k in libS_dict:
-                                                    partial_oligo.write("%s\t%s\t-\t%s\t%d\t%d\n" % (k,g,libS_dict[k],lib_E_index), lib_SE_index))
+                                                    partial_oligo.write("%s\t%s\t-\t%s\t%d\t%d\n" % (k,g,libS_dict[k],lib_E_index, lib_SE_index))
                                                     SeqIO.write(record, partial_fastq, "fastq")
                                                     count_duo_SE_no_E += 1
                                                     # matched_all_oligo.write("%s^%s\t^%s\n" % (g,k,libA_dict[k]))
@@ -244,5 +244,5 @@ with open ("%s_statistics.txt"  %  out_dir, "w") as run_stats:
     run_stats.write("Percent SE Mis-Match: %f\t%f\t%f\n" % (float(count_duo_no_match_SE/count_duo_SE), float(count_duo_no_match_SE), float(count_duo_SE)))
     run_stats.write("Single E: \n \tPercent Oligos Matched: %f\n \tPercent Oligos Not Matched: %f\n" % (float(1-(count_single_E_no_match/count_single_E)), float(count_single_E_no_match/count_single_E)))
     run_stats.write("Single S: \n \tPercent Oligos Matched: %f\n \tPercent Oligos Not Matched: %f\n" % (float(1-(count_single_S_no_match/count_single_S)), float(count_single_S_no_match/count_single_S)))
-    run_stats.write("SE: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_SE_both/count_duo_SE), float(count_duo_SE_no_oligo+count_duo_no_match_SE/count_duo_SE), float(count_duo_SE_no_S/count_duo_SE), float(count_duo_SE_no_E/count_duo_SE)))
-    run_stats.write("ES: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_ES_both/count_duo_ES), float(count_duo_ES_no_oligo+count_duo_no_match_ES/count_duo_ES), float(count_duo_ES_no_S/count_duo_ES), float(count_duo_ES_no_E/count_duo_ES)))
+    run_stats.write("SE: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_SE_both/count_duo_SE), float((count_duo_SE_no_oligo+count_duo_no_match_SE)/count_duo_SE), float(count_duo_SE_no_S/count_duo_SE), float(count_duo_SE_no_E/count_duo_SE)))
+    run_stats.write("ES: \n \tPercent Both Oligos Matched: %f\n \tPercent No Oligos Matched: %f\n \tPercent only E oligo matched: %f\n \tPercent only S oligo matched: %f\n" % (float(count_duo_ES_both/count_duo_ES), float((count_duo_ES_no_oligo+count_duo_no_match_ES)/count_duo_ES), float(count_duo_ES_no_S/count_duo_ES), float(count_duo_ES_no_E/count_duo_ES)))
