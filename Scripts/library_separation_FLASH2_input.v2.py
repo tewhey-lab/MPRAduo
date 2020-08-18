@@ -66,7 +66,7 @@ def open_by_suffix(filename):
 
 # Open write files and begin parsing the fastq file
 with open("%s.match" % out_dir, "w") as fmatch:
-    with open("%s_single_match.fa" % out_dir, "w") as match_single:
+    with open("%s_single_match.fasta" % out_dir, "w") as match_single:
         with open("%s_perfect_match.txt" % out_dir, "w") as perfect_oligo:
             with open("%s_partial_match.fastq" % out_dir, "w") as partial_fastq:
                 with open("%s_partial_match.txt" % out_dir, "w") as partial_oligo:
@@ -97,7 +97,7 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                             lib_E_index = 0
                                             lib_S_index = 0
                                             count_single += 1
-                                            # SeqIO.write(record, match_single, "fasta")
+                                            SeqIO.write(record, match_single, "fasta")
                                             if link_E in seq_only[fill_start+19:fill_start+28]:
                                                 lib_E_index = seq_only.index(link_E)
                                             if link_S in seq_only[fill_start+19:fill_start+28]:
@@ -165,12 +165,12 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                                     perfect_oligo.write("%s^%s\t%s^%s\n" % (k,g,libE_dict[k],libS_dict[g]))
                                                     fmatch.write("%s\t%s^%s\t%s^%s\tES\n" % (record.name,k,g,libE_dict[k],libS_dict[g]))
                                                 if g in libS_dict and k not in libE_dict:
-                                                    partial_oligo.write("%s\t%s\t%s\t-\t%f\t%f\n" % (k,g,libS_dict[g], float(lib_S_index), float(lib_ES_index)))
+                                                    partial_oligo.write("%s\t%s\t%s\t-\t%d\t%d\n" % (k,g,libS_dict[g], lib_S_index, lib_ES_index))
                                                     SeqIO.write(record, partial_fastq, "fastq")
                                                     count_duo_ES_no_E += 1
                                                     # matched_all_oligo.write("%s^%s\t%s^\n" % (g,k,libA_dict[g]))
                                                 if g not in libS_dict and k in libE_dict:
-                                                    partial_oligo.write("%s\t%s\t-\t%s\t%f\t%f\n" % (k,g,libE_dict[k], float(lib_S_index), float(lib_ES_index)))
+                                                    partial_oligo.write("%s\t%s\t-\t%s\t%d\t%d\n" % (k,g,libE_dict[k], lib_S_index, lib_ES_index))
                                                     SeqIO.write(record, partial_fastq, "fastq")
                                                     # matched_all_oligo.write("%s^%s\t^%s\n" % (g,k,libP_dict[k]))
                                                     count_duo_ES_no_S += 1
@@ -188,12 +188,12 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                                     perfect_oligo.write("%s^%s\t%s^%s\n" % (k,g,libS_dict[k],libE_dict[g]))
                                                     fmatch.write("%s\t%s^%s\t%s^%s\tSE\n" % (record.name,k,g,libS_dict[k],libE_dict[g]))
                                                 if g in libE_dict and k not in libS_dict:
-                                                    partial_oligo.write("%s\t%s\t%s\t-\t%f\t%f\n" % (k,g,libE_dict[g],float(lib_E_index), float(lib_SE_index)))
+                                                    partial_oligo.write("%s\t%s\t%s\t-\t%d\t%d\n" % (k,g,libE_dict[g],lib_E_index, lib_SE_index))
                                                     SeqIO.write(record, partial_fastq, "fastq")
                                                     count_duo_SE_no_S += 1
                                                     # matched_all_oligo.write("%s^%s\t%s^\n" % (g,k,libP_dict[g]))
                                                 if g not in libE_dict and k in libS_dict:
-                                                    partial_oligo.write("%s\t%s\t-\t%s\t%f\t%f\n" % (k,g,libS_dict[k],float(lib_E_index), float(lib_SE_index)))
+                                                    partial_oligo.write("%s\t%s\t-\t%s\t%d\t%d\n" % (k,g,libS_dict[k],lib_E_index), lib_SE_index))
                                                     SeqIO.write(record, partial_fastq, "fastq")
                                                     count_duo_SE_no_E += 1
                                                     # matched_all_oligo.write("%s^%s\t^%s\n" % (g,k,libA_dict[k]))
