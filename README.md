@@ -97,8 +97,36 @@ For the following files the barcode-oligo format is as follows for duo libraries
 
 There are several files that will be useful in further analysis.
   * `library_separation_FLASH2_input.py` outputs:
-    * <replicate_id>.match : tab separated file containing one record per line. The columns represent sequence ID, barcode, oligo, and library assignment.
-    * <replicate_id>_single_match.fasta : multiline fasta of all records identified as belonging to a single library.
-    * <replicate_id>_perfect_match.txt : tab separated file of perfect duo matches (both barcodes are present in the dictionary).
-    * <replicate_id>_partial_match.fastq : fastq file of all the records which had only one barcode present in the dictionary.
-    * <replicate_id>_partial_match.txt : tab separated file with columns for each barcode, oligo and the location the linker was found.
+    * `<replicate_id>.match`                  : tab separated file containing one record per line. The columns represent sequence ID, barcode, oligo, and library assignment.
+    * `<replicate_id>_single_match.fasta`     : multiline fasta of all records identified as belonging to a single library.
+    * `<replicate_id>_perfect_match.txt`      : tab separated file of perfect duo matches (both barcodes are present in the dictionary).
+    * `<replicate_id>_partial_match.fastq`    : fastq file of all the records which had only one barcode present in the dictionary.
+    * `<replicate_id>_partial_match.txt`      : tab separated file with columns for each barcode, oligo and the location the linker was found.
+    * `<replicate_id>_single_no_match.fastq`  : fastq file of all the records, identified as single, where there was no linker sequence present.
+    * `<replicate_id>_duo_no_match.fastq`     : fastq file of all the records, identified as duo, where there were no linker sequences present.
+    * `<replicate_id>_oligo_no_match.fastq`   : fastq file of all the records, where linkers were found but barcodes were not in the dictionary.
+    * `<replicate_id>_statistics.txt` :
+      * Total Records checked
+      * Total Records GFP not found
+      * Percent matched to library
+      * Percent Duo matched
+      * Percent Single matched
+      * Percent matched with no oligos
+      * Percent ES Mis-Match
+      * Percent SE Mis-Match
+      * Single E:
+        * Percent Oligos Matched
+        * Percent Oligos not Matched
+      * Single S:
+        * Percent Oligos Matched
+        * Percent Oligos not Matched
+      * SE:
+        * Percent Both Oligos Matched
+        * Percent No Oligos Matched
+        * Percent only E oligo Matched
+        * Percent only S Oligo Matched
+      * ES:
+        * Percent Both Oligos Matched
+        * Percent No Oligos Matched
+        * Percent only E oligo Matched
+        * Percent only S Oligo Matched
