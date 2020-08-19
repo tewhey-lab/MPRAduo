@@ -34,11 +34,11 @@ The set of pipelines and scripts outlined below are used for matching the oligos
 
 ## WDL Pipeline Descriptions
 
-_DuoMatch.wdl_
+### _DuoMatch.wdl_
 
 ![Grpaphical Pipeline](graphics/DuoMatch_pipeline.png?raw=true "DuoMatch Graphical Pipeline")
 
-Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (FLASH2), and pulls the barcode, oligo and UMI (*map_barcodes_duo.pl*). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (minimap2) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (*SAM2MPRA.pl*), and then counted (*Ct_seq.pl*) and parsed (*parse_map.pl*)
+Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (`FLASH2`), and pulls the barcode, oligo and UMI (`map_barcodes_duo.pl`). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (`minimap2`) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (`SAM2MPRA.pl`), and then counted (`Ct_seq.pl`) and parsed (`parse_map.pl`). `preseq` is also run, for the purposes of use in QC.
 
 An example inputs file can be found in this repository, and a description of each of the inputs required can be found below:
 
@@ -64,11 +64,15 @@ An example inputs file can be found in this repository, and a description of eac
 
 **NB** The orientation for the sequences in order to find the linker indicators for the input file the UMI end should be on the left and the end of the oligo should be on the right.
 
-_DuoCount.wdl_ and _DuoCountSingle.wdl_
+#### Files to be used later:
+
+Once the `DuoMatch` pipeline is run, the final output file will need to be passed to the `DuoCount` pipeline. Look in the first ~30 lines of the output to find the cromwell id for the relevant run. The file name ends with `.parsed` and can be found within the following path: `cromwell_executions/DuoMatch/<cromwell_id>/call-Parse/execution/<id_out>.merged.match.enh.mapped.barcode.ct.parsed`. The pipeline should be run twice, once for silencers and once for enhancers, and both parsed files should be passed to the `DuoCount` pipeline.
+
+### _DuoCount.wdl_ and _DuoCountSingle.wdl_
 
 ![Graphical Pipeline](graphics/DuoCount_pipeline.png?raw-true "DuoCount Graphical Pipeline")
 
-These two pipelines are virtually identical, the only difference is that DuoCount.wdl is for paired end reads and DuoCountSingle.wdl is for single end reads, both are expecting ~150bp reads. Read 1 (and read 2, if paired end reads) fastq files and the associated replicate IDs are passed to the pipeline (*library_separation_FLASH2_input.py*) along with the dictionary files created by _DuoMatch.wdl_ to have the libraries sorted; single and duo libraries are separated and then identified as E,S,ES, or SE. The matched file, containing the record name, barcode, matched oligo, and the assigned library, for each replicate is formatted (*associate_tags_duo.pl*) and passed to a script (*compile_bc_duo.pl*) to assemble the information into a barcode level count table.
+These two pipelines are virtually identical, the only difference is that `DuoCount.wdl` is for paired end reads and `DuoCountSingle.wdl` is for single end reads, both are expecting ~150bp reads. Read 1 (and read 2, if paired end reads) fastq files and the associated replicate IDs are passed to the pipeline (`library_separation_FLASH2_input.py`) along with the dictionary files created by `DuoMatch.wdl` to have the libraries sorted; single and duo libraries are separated and then identified as E,S,ES, or SE. The matched file, containing the record name, barcode, matched oligo, and the assigned library, for each replicate is formatted (`associate_tags_duo.pl`) and passed to a script (`compile_bc_duo.pl`) to assemble the information into a barcode level count table.
 
 An example of the inputs file for each version of the script can be found in the repository, an example of the paired end inputs file can be found below:
 
@@ -84,3 +88,17 @@ An example of the inputs file for each version of the script can be found in the
       "ReplicateCount.working_directory": "/path/to/directory/of/scripts"
     }
 ```
+
+#### Files to be used later:
+
+For the following files the barcode-oligo format is as follows for duo libraries:
+  * ES: enhancer^silencer
+  * SE: silencer^enhancer
+
+There are several files that will be useful in further analysis.
+  * `library_separation_FLASH2_input.py` outputs:
+    * <replicate_id>.match : tab separated file containing one record per line. The columns represent sequence ID, barcode, oligo, and library assignment.
+    * <replicate_id>_single_match.fasta : multiline fasta of all records identified as belonging to a single library.
+    * <replicate_id>_perfect_match.txt : tab separated file of perfect duo matches (both barcodes are present in the dictionary).
+    * <replicate_id>_partial_match.fastq : fastq file of all the records which had only one barcode present in the dictionary.
+    * <replicate_id>_partial_match.txt : tab separated file with columns for each barcode, oligo and the location the linker was found.
