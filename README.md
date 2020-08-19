@@ -96,7 +96,7 @@ For the following files the barcode-oligo format is as follows for duo libraries
   * SE: silencer^enhancer
 
 There are several files that will be useful in further analysis.
-  * `library_separation_FLASH2_input.py` outputs:
+  * `library_separation_FLASH2_input.py` outputs found in `cromwell-executions/ReplicateCount/<cromwell_id/call-prep_counts/shard-*/execution/`:
     * `<replicate_id>.match`                  : tab separated file containing one record per line. The columns represent sequence ID, barcode, oligo, and library assignment.
     * `<replicate_id>_single_match.fasta`     : multiline fasta of all records identified as belonging to a single library.
     * `<replicate_id>_perfect_match.txt`      : tab separated file of perfect duo matches (both barcodes are present in the dictionary).
@@ -130,3 +130,6 @@ There are several files that will be useful in further analysis.
         * Percent No Oligos Matched
         * Percent only E oligo Matched
         * Percent only S Oligo Matched
+  * `<id_out>.count` found in `cromwell-executions/ReplicateCount/<cromwell_id>/call-make_count_table/execution/`:
+    * Tab separated count file with columns: Barcode, Oligo, library, Replicate Ids
+    * This file will then be used with the R functions described below.
