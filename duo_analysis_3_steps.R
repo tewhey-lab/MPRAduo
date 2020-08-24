@@ -55,14 +55,14 @@ duoNames <- function(dataCount1, dataCount2, libExcl1=c(), libExcl2=c(), duoOnly
     if(lib1 %in% libExcl1) next
     message(lib1)
     dataCount1 <- dataCount1[dataCount1$plmean >= 100, ]
-    dataCount1 <- dataCount1[dataCount1$PlasmidsBCsum >= 20,]   
+    dataCount1 <- dataCount1[dataCount1$PlasmidsBCsum >= 5,]   
   }
   message("filtered 1")
   for(lib2 in levels(dataCount2$library)){
     if(lib2 %in% libExcl2) next
     message(lib2)
     dataCount2 <- dataCount2[dataCount2$plmean >= 100,] 
-    dataCount2 <- dataCount2[dataCount2$PlasmidsBCsum >= 20,]
+    dataCount2 <- dataCount2[dataCount2$PlasmidsBCsum >= 5,]
   }
   message("filtered 2")
   names_list <- list()
@@ -319,7 +319,7 @@ duoSeq <- function(dataCount, dataCond, run, filePrefix, namesList, libExcl=c(),
       outputA <- results(dds_list[[lib]], contrast=c("condition",celltype,"DNA"))
 
       message("Plotting Normalization Curves")
-      pdf(paste0("plots/Normalized_FC_Density_",celltype,".pdf"),width=10,height=10)
+      pdf(paste0("plots/Normalized_FC_Density_",celltype,"_",filePrefix,".pdf"),width=10,height=10)
       plot(density(temp_outputB[control_list[[lib]],]$log2FoldChange,na.rm=TRUE),xlim=c(-5,5),ylim=c(0,1.5),col="grey",main=paste0("Normalization - ",celltype))
       lines(density(temp_outputB$log2FoldChange,na.rm=TRUE),xlim=c(-5,5),col="black")
       lines(density(outputA$log2FoldChange,na.rm=TRUE),xlim=c(-5,5),col="red")
