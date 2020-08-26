@@ -146,14 +146,14 @@ There are two external files that are used as inputs for this function. <br>
   * Condition Table:
       * If made externally to R, it should be 2 columns with no header with the first column as the replicate IDs found in the count table, and the second column indicating the celltype identifier of that replicate. When reading in the file, use the `stringsAsFactors = F` option, the celltypes will be factorized as needed within the functions.
         ```
-            condition_table <- read.delim(condition_table_file_name, row.names=1, header=F, stringsAsFactors = F)
-            colnames(condition_table) <- "condition"
+              condition_table <- read.delim(condition_table_file_name, row.names=1, header=F, stringsAsFactors = F)
+              colnames(condition_table) <- "condition"
         ```
       * If made in R use the following code snippet as an example, substituting the order and number of celltypes in your project for the example:
         ```
-            condition_table <- as.data.frame(c(rep("DNA",4), rep("GM12878",4), rep("K562",4), rep("HepG2",4), rep("SK.N.SH", 4)), stringsAsFactors=F)
-            rownames(condition_table) <- colnames(count_table)[4:23]
-            colnames(condition_table) <- "condition"
+              condition_table <- as.data.frame(c(rep("DNA",4), rep("GM12878",4), rep("K562",4), rep("HepG2",4), rep("SK.N.SH", 4)), stringsAsFactors=F)
+              rownames(condition_table) <- colnames(count_table)[4:23]
+              colnames(condition_table) <- "condition"
         ```
 
 #### Function Dependencies:
