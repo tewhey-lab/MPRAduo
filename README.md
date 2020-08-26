@@ -137,7 +137,9 @@ There are several files that will be useful in further analysis.
 
 ## R functions
 
-##### Input Files:
+For an example of the suggested use of the functions below see `run_duo_example.R`
+
+#### Input Files:
 
 There are two external files that are used as inputs for this function. <br>
   * Counts Table: Table of counts with header, in the format of the count table produced by the `DuoCount` pipeline. <br>
@@ -154,7 +156,7 @@ There are two external files that are used as inputs for this function. <br>
             colnames(condition_table) <- "condition"
         ```
 
-##### Function Dependencies:
+#### Function Dependencies:
   * `dplyr`
   * `tibble`
   * `DESeq2`
@@ -162,7 +164,7 @@ There are two external files that are used as inputs for this function. <br>
   * `reshape2`
   * `GGally`
 
-Description of Functions:
+#### Description of Functions:
   * `duoStats` - Transforms barcode level count table to oligo level counts and calculates the plasmid mean and number of barcodes for each oligo. If your data is already oligo level and has the plasmid mean and barcode count information, this step is not necessary.
     * INPUTS:
       * dataCount: barcode level counts from the count pipeline
