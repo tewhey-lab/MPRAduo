@@ -153,3 +153,66 @@ There are two external files that are used as inputs for this function. <br>
             rownames(condition_table) <- colnames(count_table)[4:23]
             colnames(condition_table) <- "condition"
         ```
+
+##### Function Dependencies:
+  * `dplyr`
+  * `tibble`
+  * `DESeq2`
+  * `preprocessCore`
+  * `reshape2`
+  * `GGally`
+
+Description of Functions:
+  * `duoStats` - Transforms barcode level count table to oligo level counts and calculates the plasmid mean and number of barcodes for each oligo. If your data is already oligo level and has the plasmid mean and barcode count information, this step is not necessary.
+    * INPUTS:
+      * dataCount: barcode level counts from the count pipeline
+      * dataCond: Condition matrix for data, built as described above.
+    * OUTPUTS:
+      * counts_oligo : Oligo level dataframe with the last 2 columns being the plasmid mean, and barcode counts for each oligo
+  * `duoNames` - Identifies the common names between each library for 2 runs, though it can be used with only one run, runs filtering on oligos based on the plasmid mean and the number of barcodes per oligo.
+    * INPUTS:
+      * dataCount1: Oligo level count data as a dataframe, for one run being analyzed
+      * dataCount2: Oligo level count data as a dataframe for the second run being analyzed (if only using 1 run, both dataCount1 and dataCount2 should be the same count table)
+      * libExcl1 : OPTIONAL Any libraries that should be excluded from the first run
+      * libExcl2 : OPTIONAL Any libraries that should be excluded from the second run (if only using 1 run, both libExcl1 and libExcl2 should be the same list)
+      * duoOnly : LOGICAL If the library/libraries that are the focus of analysis are duo (ES or SE) then this should be set to `TRUE`, automatically `FALSE`
+    * OUTPUTS:
+      * names_list: List of oligo names in both count tables provided, separated by library.
+  * `duoPrep` - Breaks count table into library separated list of count tables
+  * `duoSeq` - Performs the DESeq analysis on the library separated count tables, and writes out mean shifted, celltype specific, results tables, and plots of the results of normalization.
+    * INPUTS:
+      * dataCount : Oligo level count data as a dataframe (output of `duoStats`)
+      * dataCond : Condition matrix for data, built as described above
+      * run : Run Identifier - can be int or character
+      * filePrefix : identifier for the overall dataset
+      * namesList : output of `duoNames`
+      * libExcl : OPTIONAL A list of libraries to be excluded.
+      * negListE : negative controls for the enhancer library
+      * negListS : negative controls for the silencer library
+    * OUTPUTS:
+      * dds_list : DESeqDataSet for the given run separated by library
+  * `duoSig` - Replaces celltype agnostic dispersions with celltype specific dispersions
+  * `duoNorm` - Performs a quantile normalization on the log2FoldChange between two separate runs
+    * INPUTS:
+      * ddsList1 : Result list from `duoSeq` function from one run
+      * ddsList2 : Result list from `duoSeq` function from second run
+      * dataCond : Condition matrix for data, built as described above
+      * filePrefix : Identifier for the overall dataset
+      * pairsList : list of library pairs to normalize against each other (i.e. S_2, S_3)
+    * OUTPUTS:
+      * dds_norm : List of lists of DESeq results from each library, first element will be normalized ddsList1 second element will be ddsList2
+  * `duoCor` - Plots the correlation of the counts table passed to the function, over all celltypes and within individual celltypes
+    * INPUTS:
+      * dataCount : Count data (either oligo level raw counts or normalized counts from `duoSeq`)
+      * namesList : output of `duoNames`
+      * dataCond: Condition matrix for data, built as described above
+      * filePrefix : Identifier for the overall dataset
+      * run : Run identifier - can be int or character
+      * libExcl : OPTIONAL A list of libraries to be excluded (required for raw counts)
+      * libIncl : OPTIONAL A list of libraries to be included (required for raw counts)
+  * `duoLogCor` - Plots the correlation between the log2FoldChange of all celltypes with the option to subset from a list of oligos
+    * INPUTS:
+      * dds_list : List of DESeqDataSet objects (output of `duoSeq`)
+      * dataCond : Condition matrix for data, built as described above
+      * filePrefix : Identifier for the overall dataset
+      * subsetList : OPTIONAL List of specific oligos to compare, if blank all oligos considered.
