@@ -180,7 +180,7 @@ There are two external files that are used as inputs for this function. <br>
       * duoOnly : LOGICAL If the library/libraries that are the focus of analysis are duo (ES or SE) then this should be set to `TRUE`, automatically `FALSE`
     * OUTPUTS:
       * names_list: List of oligo names in both count tables provided, separated by library.
-  * `duoPrep` - Breaks count table into library separated list of count tables
+  * `duoPrep` - Breaks count table into library separated list of count tables (called by `duoSeq`)
   * `duoSeq` - Performs the DESeq analysis on the library separated count tables, and writes out mean shifted, celltype specific, results tables, and plots of the results of normalization.
     * INPUTS:
       * dataCount : Oligo level count data as a dataframe (output of `duoStats`)
@@ -193,7 +193,7 @@ There are two external files that are used as inputs for this function. <br>
       * negListS : negative controls for the silencer library
     * OUTPUTS:
       * dds_list : DESeqDataSet for the given run separated by library
-  * `duoSig` - Replaces celltype agnostic dispersions with celltype specific dispersions
+  * `duoSig` - Replaces celltype agnostic dispersions with celltype specific dispersions (called by `duoSeq`)
   * `duoNorm` - Performs a quantile normalization on the log2FoldChange between two separate runs
     * INPUTS:
       * ddsList1 : Result list from `duoSeq` function from one run
