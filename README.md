@@ -165,7 +165,7 @@ There are two external files that are used as inputs for this function. <br>
   * `GGally`
 
 #### Description of Functions:
-  * `duoStats` - Transforms barcode level count table to oligo level counts and calculates the plasmid mean and number of barcodes for each oligo. If your data is already oligo level and has the plasmid mean and barcode count information, this step is not necessary.
+  * `duoStats` - Transforms barcode level count table to oligo level counts and calculates the plasmid mean and number of barcodes for each oligo, as well as creates a tally for each celltype of how many zeros are present between the replicates per oligo. If your data is already oligo level and has the plasmid mean and barcode count information, this step is not necessary.
     * INPUTS:
       * dataCount: barcode level counts from the count pipeline
       * dataCond: Condition matrix for data, built as described above.
