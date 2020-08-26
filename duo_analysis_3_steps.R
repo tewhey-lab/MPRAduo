@@ -38,6 +38,17 @@ duoStats <- function(dataCount,dataCond){
   counts_oligo$library <- as.factor(counts_oligo$library)
   y <- grepl(",",rownames(counts_oligo))
   counts_oligo <- counts_oligo[!y,]
+  celltypes <- as.factor(dataCond$condition)
+  for(celltype in celltypes){
+    counts_oligo[,celltype] <- 0
+    for(oligo in 1:nrow(counts_oligo)){
+      for(rep in rownames(dataCond)[dataCond$condition==celltype]){
+        if(as.integer(counts_oligo[oligo,rep]) == 0){
+          counts_oligo[oligo,celltype] <- counts_oligo[oligo,celltype] + 1
+        }
+      }
+    }
+  }
   return(counts_oligo)
 }
 
@@ -47,21 +58,21 @@ duoStats <- function(dataCount,dataCond){
 ##    dataCount1: count data as a dataframe, for one run being analyzed
 ##    dataCount2: count data as a dataframe, for the second run being analyzed
 ##    libExcl1  : OPTIONAL. A list of libraries to be excluded from the first run
-##    libExcl2  : OPTIONAL. A list of libraries to be excluded from teh second run
+##    libExcl2  : OPTIONAL. A list of libraries to be excluded from the second run
 ## OUTPUTS:
 ##    names_list: List of oligos in both runs separated by library
 duoNames <- function(dataCount1, dataCount2, libExcl1=c(), libExcl2=c(), duoOnly=F){
   for(lib1 in levels(dataCount1$library)){
     if(lib1 %in% libExcl1) next
     message(lib1)
-    dataCount1 <- dataCount1[dataCount1$plmean >= 100, ]
+    dataCount1 <- dataCount1[dataCount1$plmean >= 10, ]
     dataCount1 <- dataCount1[dataCount1$PlasmidsBCsum >= 5,]   
   }
   message("filtered 1")
   for(lib2 in levels(dataCount2$library)){
     if(lib2 %in% libExcl2) next
     message(lib2)
-    dataCount2 <- dataCount2[dataCount2$plmean >= 100,] 
+    dataCount2 <- dataCount2[dataCount2$plmean >= 10,] 
     dataCount2 <- dataCount2[dataCount2$PlasmidsBCsum >= 5,]
   }
   message("filtered 2")
@@ -153,7 +164,7 @@ duoPrep <- function(dataCount, dataCond, run, namesList, libExcl = c()){
 ##    negListS  : negative controls for the silencer library
 ## OUTPUTS:
 ##    dds_list  : DESeqDataSet for the given run with each library an element of the list
-duoSeq <- function(dataCount, dataCond, run, filePrefix, namesList, libExcl=c(), negListS = c(), negListE = c()){
+duoSeq <- function(dataCount, dataCond, run, filePrefix, namesList, libExcl=c(), negListS = c(), negListE = c(), filterPost = F){
   `%notin%` <- Negate(`%in%`)
   lib_list <- duoPrep(dataCount,dataCond, run, namesList, libExcl)
   dataCond$condition <- as.factor(dataCond$condition)
@@ -290,6 +301,13 @@ duoSeq <- function(dataCount, dataCond, run, filePrefix, namesList, libExcl=c(),
     dds_duo_res <- duoSig(dds_temp_out,dds_rna[[lib]],dataCond)
     dds_list[[lib]] <- dds_duo_res
     res_list[[lib]] <- list()
+    if(filterPost==T){
+      plas_counts <- counts(dds_list[[lib]])[which(dataCond$condition=="DNA"),]
+      message(paste0(dim(plas_counts), collapse = "\t"))
+      plas_means <- rowMeans(plas_counts)
+      dds_list[[lib]] <- dds_list[[lib]][plas_means>10]
+      message(paste0(dim(dds_list[[lib]]), collapse = "\t"))
+    }
     for(celltype in levels(dataCond$condition)){
       if(celltype=="DNA") next
       res_list[[lib]][[celltype]] <- results(dds_duo_res, contrast = c("condition",celltype,"DNA"))
