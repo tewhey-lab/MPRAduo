@@ -14,6 +14,7 @@ workflow DuoMatch {
   String link_P_oligo
   String end_A_oligo
   String end_P_oligo
+  String out_directory
 
   call Flash { input:
                   read_a=read_a,
@@ -71,6 +72,21 @@ workflow DuoMatch {
                  counted=Ct_Seq.out,
                  id_out=id_out
               }
+  call relocate { input:
+                    flashed=Flash.out,
+                    matched=Pull_Barcodes.out1,
+                    rejected=Pull_Barcodes.out2,
+                    organized_fasta=Rearrange.out,
+                    sam_file=MiniMap.out1,
+                    map_log=MiniMap.out2,
+                    MPRA_out=SAM2MPRA.out,
+                    sorted=Sort.out,
+                    counted=Ct_Seq.out,
+                    parsed=Parse.out,
+                    preseq_hist=preseq.hist,
+                    preseq_res=preseq.res,
+                    out_directory=out_directory
+                  }
   }
 
 task Flash {
@@ -188,3 +204,21 @@ task preseq {
    File res="${id_out}.merged.match.enh.mapped.barcode.ct.hist.preseq"
    }
  }
+task relocate{
+  File flashed
+  File matched
+  File rejected
+  File organized_fasta
+  File sam_file
+  File map_log
+  File MPRA_out
+  File sorted
+  File counted
+  File parsed
+  File preseq_hist
+  File preseq_res
+  String out_directory
+  command {
+      mv ${flashed} ${matched} ${rejected} ${organized_fasta} ${sam_file} ${map_log} ${MPRA_out} ${sorted} ${counted} ${parsed} ${preseq_hist} ${preseq_res} ${out_directory}
+    }
+  }

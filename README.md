@@ -50,6 +50,7 @@ An example inputs file can be found in this repository, and a description of eac
       "DuoMatch.read_b_number": "2 (unless read b above is read 1)",
       "DuoMatch.seq_min": "100 (suggested, minimum length of barcode-oligo sequence)",
       "DuoMatch.working_directory": "/path/to/directory/of/scripts",
+      "DuoMatch.out_directory": "/path/to/directory/to/move/output/files/",
       "DuoMatch.id_out": "Dictionary_ID_Name",
       "DuoMatch.link_A_bc": "TCTAGA (6 bases at the barcode end of the linker sequence for Silencers)",
       "DuoMatch.link_P_bc": "AGTCAG (6 bases at the barcode end of the linker sequence for Enhancers)",
