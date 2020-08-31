@@ -139,11 +139,11 @@ while (<FASTA>){
   }
 # Find the end of the oligo
   if($library eq "P"){
-    $oligo_end = index(substr($r1, -18, 6), $end_P_oligo);
+    $oligo_end = index(substr($r1, -18, 12), $end_P_oligo);
     $oligo_end += -18;
   }
   if($library eq "A"){
-    $oligo_end = index(substr($r1, -17, 6), $end_A_oligo);
+    $oligo_end = index(substr($r1, -17, 12), $end_A_oligo);
     $oligo_end += -17;
   }
 
