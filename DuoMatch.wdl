@@ -215,7 +215,7 @@ task qc_plot {
   String working_directory
   String id_out
   command {
-    rscript ${working_directory}/mapping_QC_plots.R ${parsed} ${id_out}
+    Rscript ${working_directory}/mapping_QC_plots.R ${parsed} ${id_out}
     }
   output {
     File plots="${id_out}_barcode_qc.pdf"
