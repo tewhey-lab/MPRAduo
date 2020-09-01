@@ -39,7 +39,7 @@ The set of pipelines and scripts outlined below are used for matching the oligos
 
 ![Grpaphical Pipeline](graphics/DuoMatch_pipeline.png?raw=true "DuoMatch Graphical Pipeline")
 
-Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (`FLASH2`), and pulls the barcode, oligo and UMI (`map_barcodes_duo.pl`). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (`minimap2`) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (`SAM2MPRA.pl`), and then counted (`Ct_seq.pl`) and parsed (`parse_map.pl`). `preseq` is also run, for the purposes of use in QC.
+Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (`FLASH2`), and pulls the barcode, oligo and UMI (`map_barcodes_duo.pl`). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (`minimap2`) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (`SAM2MPRA.pl`), and then counted (`Ct_seq.pl`) and parsed (`parse_map.pl`). `preseq`, and `mapping_QC_plots.R` are also run, for the purposes of use in QC. At the end of the pipeline, all files will be moved to an output directory specified in the inputs, to save space on your machine make sure to delete the execution folder for `DuoMatch`.
 
 An example inputs file can be found in this repository, and a description of each of the inputs required can be found below:
 
