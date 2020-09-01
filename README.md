@@ -7,12 +7,13 @@
   * `conda install -c bioconda cromwell`
   * `conda install -c bioconda womtool`
 
-* Have modules for FLASH2, minimap2, preseq, pandas, and Biopython available
+* Have modules for FLASH2, minimap2, preseq, pandas, reshape2, and Biopython available
   * `conda install -c bioconda flash2 `
   * `conda install -c bioconda minimap2`
   * `conda install -c bioconda preseq`
   * `conda install -c anaconda pandas`
   * `conda install -c anaconda biopython`
+  * `conda install -c r r-reshape2`
 
 * Make sure all the available scripts (except for the WDL itself) are in a known directory (you will need to provide the path to this directory)
 
