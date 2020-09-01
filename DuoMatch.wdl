@@ -72,6 +72,11 @@ workflow DuoMatch {
                  counted=Ct_Seq.out,
                  id_out=id_out
               }
+  call qc_plot { input:
+                    parsed=Parse.out,
+                    working_directory=working_directory,
+                    id_out=id_out
+              }
   call relocate { input:
                     flashed=Flash.out,
                     matched=Pull_Barcodes.out1,
@@ -85,6 +90,7 @@ workflow DuoMatch {
                     parsed=Parse.out,
                     preseq_hist=preseq.hist,
                     preseq_res=preseq.res,
+                    qc_plot=qc_plot.plots,
                     out_directory=out_directory
                   }
   }
@@ -204,6 +210,17 @@ task preseq {
    File res="${id_out}.merged.match.enh.mapped.barcode.ct.hist.preseq"
    }
  }
+task qc_plot {
+  File parsed
+  String working_directory
+  String id_out
+  command {
+    rscript ${working_directory}/mapping_QC_plots.R ${parsed} ${id_out}
+    }
+  output {
+    File plots="${id_out}_barcode_qc.pdf"
+    }
+}
 task relocate{
   File flashed
   File matched
@@ -217,8 +234,9 @@ task relocate{
   File parsed
   File preseq_hist
   File preseq_res
+  File qc_plot
   String out_directory
   command {
-      mv ${flashed} ${matched} ${rejected} ${organized_fasta} ${sam_file} ${map_log} ${MPRA_out} ${sorted} ${counted} ${parsed} ${preseq_hist} ${preseq_res} ${out_directory}
+      mv ${flashed} ${matched} ${rejected} ${organized_fasta} ${sam_file} ${map_log} ${MPRA_out} ${sorted} ${counted} ${parsed} ${preseq_hist} ${preseq_res} ${qc_plot} ${out_directory}
     }
   }
