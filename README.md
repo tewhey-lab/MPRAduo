@@ -167,16 +167,22 @@ There are two external files that are used as inputs for this function. <br>
   * `GGally`
 
 #### Description of Functions:
+  * `duoAttr` - Updates the attributes table to accommodate the Enhancer^Silencer syntax used in duo experiments
+      * INPUTS:
+        * duoAttr : Attributes table (as created by `make_attributes_duo.pl`) with silencer information
+        * enhList : List of enhancers used in the project
+      * OUTPUTS:
+        * attr_update : Updated attributes table accommodating the Enhancer^Silencer syntax
   * `duoStats` - Transforms barcode level count table to oligo level counts and calculates the plasmid mean and number of barcodes for each oligo, as well as creates a tally for each celltype of how many zeros are present between the replicates per oligo. If your data is already oligo level and has the plasmid mean and barcode count information, this step is not necessary.
     * INPUTS:
-      * dataCount: barcode level counts from the count pipeline
-      * dataCond: Condition matrix for data, built as described above.
+      * dataCount : barcode level counts from the count pipeline
+      * dataCond : Condition matrix for data, built as described above.
     * OUTPUTS:
       * counts_oligo : Oligo level dataframe with the last 2 columns being the plasmid mean, and barcode counts for each oligo
   * `duoNames` - Identifies the common names between each library for 2 runs, though it can be used with only one run, runs filtering on oligos based on the plasmid mean and the number of barcodes per oligo.
     * INPUTS:
-      * dataCount1: Oligo level count data as a dataframe, for one run being analyzed
-      * dataCount2: Oligo level count data as a dataframe for the second run being analyzed (if only using 1 run, both dataCount1 and dataCount2 should be the same count table)
+      * dataCount1 : Oligo level count data as a dataframe, for one run being analyzed
+      * dataCount2 : Oligo level count data as a dataframe for the second run being analyzed (if only using 1 run, both dataCount1 and dataCount2 should be the same count table)
       * libExcl1 : OPTIONAL Any libraries that should be excluded from the first run
       * libExcl2 : OPTIONAL Any libraries that should be excluded from the second run (if only using 1 run, both libExcl1 and libExcl2 should be the same list)
       * duoOnly : LOGICAL If the library/libraries that are the focus of analysis are duo (ES or SE) then this should be set to `TRUE`, automatically `FALSE`
@@ -220,3 +226,10 @@ There are two external files that are used as inputs for this function. <br>
       * dataCond : Condition matrix for data, built as described above
       * filePrefix : Identifier for the overall dataset
       * subsetList : OPTIONAL List of specific oligos to compare, if blank all oligos considered.
+  * `duol2fcDensity` - Plots the log2FoldChange density for each enhancer provided in one plot (currently limited to 5 enhancers) with a subset of oligos, subsetted by a part of the oligo name
+    * INPUTS:
+      * dds_list : Output of `duoSeq`
+      * dataCond : Condition matrix for data, built as described above
+      * enhList : List of enhancers used in the project
+      * negIndc : String indicating the subset of oligos to pull, the string should be present in the oligo names
+      * filterList : List of oligos to take for reference subset.
