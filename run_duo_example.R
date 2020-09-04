@@ -34,6 +34,7 @@ duo_norm_counts <- duoNorm(duo_2_DE, duo_3_DE, duo_condition, "original_barcodes
 # Read in count table and create condition table
 
 count_init <- read.delim("path_to_count_table",stringsAsFactors=F)
+attr_init <- read.delim("path_to_attributes_table", stringsAsFactors = F)
 
 condition_table <- as.data.frame(c(rep("DNA",4), rep("GM12878",4), rep("K562",4), rep("HepG2",4), rep("SK.N.SH", 4)), stringsAsFactors=F)
 colnames(condition_table) <- "condition"
@@ -48,10 +49,13 @@ oligo_names <- duoNames(oligo_count_table,oligo_count_table,libExcl1 = c("E","S"
 ## Run DESeq analysis
 ENC <- "En02"
 all_names_split <- colsplit(oligo_names$ES, pattern = "\\^", names = c("enhancer","silencer"))
-negs <- grepl("Neg", all_names_split$silencer)
-SNC <- all_names_split$silencer[negs]
+SNC <- attr_init$ID[which(attr_init$project=="NegCtrl")]
 
-oligo_seq <- duoSeq(oligo_count_table, condition_table, 1, "example",oligo_names, negListE = ENC, negListS = SNC, libExcl = c("E","S"))
+enh_all <- c("En02", "En09", "En11", "En19", "En21")
+
+oligo_attr <- duoAttr(attr_init, enhList = enh_all)
+
+oligo_seq <- duoSeq(oligo_attr, oligo_count_table, condition_table, 1, "example",oligo_names, negListE = ENC, negListS = SNC, libExcl = c("E","S"))
 
 ## Count Table correlation (cell types)
 duoCor(dataCount=oligo_count_table,dataCond=condition_table,namesList = oligo_names,filePrefix = "example",run=1,libExcl = c("E","S"), libIncl = "ES_1")
