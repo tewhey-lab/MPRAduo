@@ -36,6 +36,8 @@ flags_parsedP$error_rate <- as.numeric(flags_parsedP$error_rate)
 
 flagP_ct<-data.frame(table(flagsP$flag_code))
 colnames(flagP_ct)<-c("Flag","Freq")
+message(paste0(flagP_ct$Flag, collapse = "\t"))
+message(paste0(flagP_ct$Freq, collapse = "\t"))
 flagP_ct$Flag<-as.character(flagP_ct$Flag)
 flagP_ct[flagP_ct$Flag==0,]$Flag<-"Passing"
 flagP_ct[flagP_ct$Flag==2,]$Flag<-"Failed or No Mapping"
