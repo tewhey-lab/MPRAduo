@@ -68,7 +68,7 @@ An example inputs file can be found in this repository, and a description of eac
 
 #### Files to be used later:
 
-Once the `DuoMatch` pipeline is run, the final output file will need to be passed to the `DuoCount` pipeline. Look in the first ~30 lines of the output to find the cromwell id for the relevant run. The file name ends with `.parsed` and can be found within the following path: `cromwell_executions/DuoMatch/<cromwell_id>/call-Parse/execution/<id_out>.merged.match.enh.mapped.barcode.ct.parsed`. The pipeline should be run twice, once for silencers and once for enhancers, and both parsed files should be passed to the `DuoCount` pipeline.
+Once the `DuoMatch` pipeline is run, the final output file will need to be passed to the `DuoCount` pipeline. Since the last step in the pipeline is to pass all the relevant files created to the output directory specified in the inputs, the parsed file will be found in `path/to/output/directory/<id_out>.merged.match.enh.mapped.barcode.ct.parsed` The pipeline should be run twice, once for silencers and once for enhancers, and both parsed files should be passed to the `DuoCount` pipeline.
 
 ### _DuoCount.wdl_ and _DuoCountSingle.wdl_
 
