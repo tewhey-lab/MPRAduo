@@ -31,6 +31,9 @@
 * Run the pipeline with your inputs
   `cromwell run <pipeline_name>.wdl --inputs <your_projects_name>_inputs.json`
 
+**To submit to slurm** Make sure that you give the pipeline enough memory to run, if the pipeline fails the first time you run it, look at the end of the slurm output file to determine whether you need to give it more time or more memory
+  * `sbatch -p compute -q batch -t 24:00:00 --mem=45GB -c 8 --wrap "cromwell run <pipeline_name>.wdl --inputs <your_projects_name>_inputs.json"`
+
 The set of pipelines and scripts outlined below are used for matching the oligos and barcodes, counting the sequenced duo barcodes, and a set of functions in R that can be used to effectively analyze the count output.
 
 ## WDL Pipeline Descriptions
