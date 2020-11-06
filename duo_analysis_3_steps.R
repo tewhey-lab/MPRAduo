@@ -36,7 +36,9 @@ duoAttr <- function(duoAttr, enhList = c()){
 ## OUTPUTS:
 ##    counts_oligo: oligo level counts table with plasmid mean and number of barcodes for each oligo
 duoStats <- function(dataCount,dataCond){
-  BCSum <- as.data.frame(table(dataCount$Oligo))
+  plmd_counts <- dataCount[,c("Oligo",rownames(dataCond)[as.factor(dataCond$condition)=="DNA"])]
+  message(class(plmd_counts[,colnames(plmd_counts)!="Oligo"]))
+  BCSum <- as.data.frame(table(plmd_counts$Oligo[rowMeans(as.matrix(plmd_counts[,colnames(plmd_counts)!="Oligo"])) > 0]))
   message("set column names")
   colnames(BCSum) <- c("Oligo","PlasmidsBCsum")
   message("aggregating oligos")
@@ -56,7 +58,7 @@ duoStats <- function(dataCount,dataCond){
   y <- grepl(",",rownames(counts_oligo))
   counts_oligo <- counts_oligo[!y,]
   celltypes <- as.factor(dataCond$condition)
-  for(celltype in celltypes){
+  for(celltype in levels(celltypes)){
     message(celltype)
     counts_oligo[,celltype] <- 0
     for(oligo in 1:nrow(counts_oligo)){
@@ -83,15 +85,15 @@ duoNames <- function(dataCount1, dataCount2, libExcl1=c(), libExcl2=c(), duoOnly
   for(lib1 in levels(dataCount1$library)){
     if(lib1 %in% libExcl1) next
     message(lib1)
-    dataCount1 <- dataCount1[dataCount1$plmean >= 10, ]
-    dataCount1 <- dataCount1[dataCount1$PlasmidsBCsum >= 5,]   
+    dataCount1 <- dataCount1[dataCount1$plmean >= 20, ]
+    dataCount1 <- dataCount1[dataCount1$PlasmidsBCsum >= 10,]   
   }
   message("filtered 1")
   for(lib2 in levels(dataCount2$library)){
     if(lib2 %in% libExcl2) next
     message(lib2)
-    dataCount2 <- dataCount2[dataCount2$plmean >= 10,] 
-    dataCount2 <- dataCount2[dataCount2$PlasmidsBCsum >= 5,]
+    dataCount2 <- dataCount2[dataCount2$plmean >= 20,] 
+    dataCount2 <- dataCount2[dataCount2$PlasmidsBCsum >= 10,]
   }
   message("filtered 2")
   names_list <- list()
@@ -186,6 +188,9 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
   `%notin%` <- Negate(`%in%`)
   lib_list <- duoPrep(dataCount,dataCond, run, namesList, libExcl)
   dataCond$condition <- as.factor(dataCond$condition)
+  silencer_ehancer_split <- colsplit(duoAttr$ID, "\\^", names = c("enhancer","silencer"))
+  num_enh <- length(unique(silencer_enhancer_split$enhancer))
+  message(num_enh)
   dds_list <- list()
   dds_rna <- list()
   control_list <- list()
@@ -282,9 +287,13 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
   neg_randoms_A <- expand.grid(negListE, negListS)
   neg_randoms_A <- mutate(neg_randoms_A, duo_neg = paste(!!!rlang::syms(c("Var2","Var1")), sep = "^"))
   duo_neg_list_A <- neg_randoms_A$duo_neg
+  duo_neg_list_A <- duo_neg_list_A[duo_neg_list_A %in% namesList[[1]]]
+  message(duo_neg_list_A[1])
   neg_randoms_B <- expand.grid(negListE, negListS)
   neg_randoms_B <- mutate(neg_randoms_B, duo_neg = paste(!!!rlang::syms(c("Var1","Var2")), sep = "^"))
   duo_neg_list_B <- neg_randoms_B$duo_neg
+  duo_neg_list_B <- duo_neg_list_B[duo_neg_list_B %in% namesList[[1]]]
+  message(duo_neg_list_B[1])
   for(lib in names(still_to_check)){
     dds_temp_out <- dds_list[[lib]]
     for(celltype in levels(dataCond$condition)){
@@ -327,33 +336,36 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
   res_dds_rownames <- data.frame()
   for(res in names(res_list)){
     counts_norm <- counts(dds_list[[lib]], normalized = T)
+    message("expanding counts")
+    norm_exp <- expandDups(counts_norm)
     outA <- list()
     full_output <- list()
     for(celltype in names(res_list[[res]])){
+      # if(celltype != "GM12878") next
       outputA <- res_list[[lib]][[celltype]]
-      
+
       message(celltype)
       message("Results of dds_results recieved")
-      
+
       ctrl_cols <- row.names(dataCond)[which(dataCond$condition=="DNA")]
       exp_cols <- row.names(dataCond)[which(dataCond$condition==celltype)]
-      
+
       message("Control and Experiment Columns Set")
-      
+
       ctrl_mean <- rowMeans(counts_norm[, colnames(counts_norm) %in% ctrl_cols], na.rm = T)
       exp_mean <- rowMeans(counts_norm[, colnames(counts_norm) %in% exp_cols], na.rm = T)
       output_2 <- cbind(ctrl_mean,exp_mean,outputA[,-1])
-      
+
       message("Removing Duplicates")
       dups_output<-expandDups(output_2)
 
       message("Writing standard results files")
       results_out<-merge(duoAttr, as.matrix(dups_output), by.x="ID", by.y="row.names", all.x=TRUE, no.dups=F)
       full_output[[celltype]] <- results_out
-      write.table(results_out, file=paste0("results/",filePrefix,"_",celltype,"_results.run",run,".txt"), row.names=F, col.names=T, sep='\t')
+      write.table(results_out, file=paste0("results/",filePrefix,"_",celltype,"_results.run",run,".txt"), row.names=F, col.names=T, sep='\t', quote=F)
 
       message("Writing T-Test Results Files")
-      outA[[celltype]]<-cellSpecificTtest(duoAttr, counts_norm, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols, altRef=T)
+      outA[[celltype]]<-cellSpecificTtest(duoAttr, norm_exp, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols, n=num_enh, altRef=T)
       write.table(outA[[celltype]],paste0("results/", filePrefix, "_", celltype, "_emVAR.out"), row.names=F, col.names=T, sep="\t", quote=F)
     }
   }
@@ -382,6 +394,7 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
     }
   }
   return(dds_list)
+  # return(outA)
 }
 
 ### Replaces celltype agnostic dispersions with celltype specific dispersions
@@ -415,7 +428,7 @@ duoSig <- function(dds_results, dds_rna, cond_data){
 ##    ctrl_cols       : passed from the dataOut function
 ##    exp_cols        : passed from the dataOut function
 ##    altRef          : Logical, default T indicating sorting by alt/ref, if sorting ref/alt set to F
-cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols, altRef = T){
+cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols,n, altRef = T){
   snp_data <- subset(attributesData,allele=="ref" | allele=="alt")
   snp_data <- snp_data[order(snp_data$SNP),]
   snp_data$comb <- paste(snp_data$SNP,"_",snp_data$window,"_",snp_data$strand,"_",snp_data$haplotype,sep="")
@@ -425,60 +438,122 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
   message(paste0(colnames(tmp_ct), collapse = "\t"))
   message(paste0(head(tmp_ct[,1]), collapse = "\t"))
   
-  snp_data_pairs <- snp_data[snp_data$comb %in% tmp_ct[tmp_ct$Freq==10,]$Var1,]
+  snp_data_pairs <- snp_data[snp_data$comb %in% tmp_ct[tmp_ct$Freq==n*2,]$Var1,]
   
   message(nrow(snp_data))
   message(nrow(snp_data_pairs))
   
-  snp_data_rejected <- snp_data[snp_data$comb %in% tmp_ct[tmp_ct$Freq!=10,]$Var1,]
+  snp_data_rejected <- snp_data[snp_data$comb %in% tmp_ct[tmp_ct$Freq!=n*2,]$Var1,]
   
   snp_data_ctdata_pairs <- merge(snp_data_pairs, counts_norm, by.x="ID", by.y="row.names", all.x=T, no.dups=F)
-  snp_data_ctdata_pairs <- snp_data_ctdata_pairs[order( snp_data_ctdata_pairs$SNP, snp_data_ctdata_pairs$window),]
+  snp_data_ctdata_pairs <- snp_data_ctdata_pairs[order( snp_data_ctdata_pairs$SNP, snp_data_ctdata_pairs$window, snp_data_ctdata_pairs$allele),]
   snp_data_expdata_pairs <- merge(snp_data_pairs,dups_output, by.x="ID", by.y="row.names", all.x=T, no.dups=F)
-  snp_data_expdata_pairs <- snp_data_expdata_pairs[order(snp_data_expdata_pairs$SNP, snp_data_expdata_pairs$window),]
+  snp_data_expdata_pairs <- snp_data_expdata_pairs[order(snp_data_expdata_pairs$SNP, snp_data_expdata_pairs$window, snp_data_expdata_pairs$allele),]
+  
+  # if(altRef==T){
+  #   evens <- c(seq(6,nrow(snp_data_pairs),by=10),seq(7,nrow(snp_data_pairs),by=10), seq(8, nrow(snp_data_pairs),by=10),seq(9,nrow(snp_data_pairs),by=10),seq(10,nrow(snp_data_pairs),by=10))
+  #   odds <- c(seq(1,nrow(snp_data_pairs),by=10),seq(2,nrow(snp_data_pairs),by=10), seq(3, nrow(snp_data_pairs),by=10),seq(4,nrow(snp_data_pairs),by=10),seq(5,nrow(snp_data_pairs),by=10))
+  # }else{  
+  #   evens <- c(seq(1,nrow(snp_data_pairs),by=10),seq(2,nrow(snp_data_pairs),by=10), seq(3, nrow(snp_data_pairs),by=10),seq(4,nrow(snp_data_pairs),by=10),seq(5,nrow(snp_data_pairs),by=10))
+  #   odds <- c(seq(6,nrow(snp_data_pairs),by=10),seq(7,nrow(snp_data_pairs),by=10), seq(8, nrow(snp_data_pairs),by=10),seq(9,nrow(snp_data_pairs),by=10),seq(10,nrow(snp_data_pairs),by=10))
+  # }
   
   if(altRef==T){
-    evens <- seq(2, nrow(snp_data_pairs), by = 2)
-    odds <- seq(1, nrow(snp_data_pairs), by = 2)
-  }else{  
-    evens <- seq(1, nrow(snp_data_pairs), by=2)
-    odds <- seq(2, nrow(snp_data_pairs), by=2)
+    evens <- c()
+    odds <- c()
+    for(i in (n+1):2*n){
+      evens <- c(evens, seq(i, nrow(snp_data_pairs),by=n*2))
+    }
+    for(i in 1:n){
+      odds <- c(odds, seq(i, nrow(snp_data_pairs), by=n*2))
+    }
+  }else{
+    for(i in 1:n){
+      evens <- c(evens, seq(i, nrow(snp_data_pairs),by=n*2))
+    }
+    for(i in (n+1):2*n){
+      odds <- c(odds, seq(i, nrow(snp_data_pairs), by=n*2))
+    }
   }
   
-  out <- cbind(
-    snp_data_expdata_pairs[evens,c(1,2,3,4,5,6,7,9)],
-    within(data.frame(
-      A_Ctrl_Mean <- snp_data_expdata_pairs[evens, "ctrl_mean"],
-      A_Exp_Mean <- snp_data_expdata_pairs[evens, "exp_mean"],
-      A_log2FC <- snp_data_expdata_pairs[evens, "log2FoldChange"],
-      A_log2FC_SE <- -log10(snp_data_expdata_pairs[evens, "lfcSE"]),
-      A_logP <- -log10(snp_data_expdata_pairs[evens, "pvalue"]),
-      A_logPadj_BH <- -log10(snp_data_expdata_pairs[evens, "padj"]),    #BF Correction
-      A_logPadj_BF <- -log10(snp_data_expdata_pairs[evens, "pvalue"]*(nrow(snp_data_expdata_pairs)/2)),    #BF Correction
-      B_Ctrl_Mean <- snp_data_expdata_pairs[odds, "ctrl_mean"],
-      B_Exp_Mean <- snp_data_expdata_pairs[odds, "exp_mean"],
-      B_log2FC <- snp_data_expdata_pairs[odds, "log2FoldChange"],
-      B_log2FC_SE <- -log10(snp_data_expdata_pairs[odds, "lfcSE"]),
-      B_logP <- -log10(snp_data_expdata_pairs[odds, "pvalue"]),
-      B_logPadj_BH <- -log10(snp_data_expdata_pairs[odds, "padj"]),    #BF Correction
-      B_logPadj_BF <- -log10(snp_data_expdata_pairs[odds, "pvalue"]*(nrow(snp_data_expdata_pairs)/2))),{   #BF Correction
-        A_logP[is.na(A_logP)] <- 0
-        A_logP[A_logP == Inf] <- max(A_logP[is.finite(A_logP)])
-        A_logPadj_BH[A_logPadj_BH < 0]<-0
-        A_logPadj_BH[A_logPadj_BH == Inf] <- max(A_logPadj_BH[is.finite(A_logPadj_BH)])
-        A_logPadj_BF[A_logPadj_BF < 0]<-0
-        A_logPadj_BF[A_logPadj_BF == Inf] <- max(A_logPadj_BF[is.finite(A_logPadj_BF)])
-        B_logP[is.na(B_logP)] <- 0
-        B_logP[B_logP == Inf] <- max(B_logP[is.finite(B_logP)])
-        B_logPadj_BH[B_logPadj_BH < 0]<-0
-        B_logPadj_BH[B_logPadj_BH == Inf] <- max(B_logPadj_BH[is.finite(B_logPadj_BH)])
-        B_logPadj_BF[B_logPadj_BF < 0]<-0
-        B_logPadj_BF[B_logPadj_BF == Inf] <- max(B_logPadj_BF[is.finite(B_logPadj_BF)])
-      }))
+  # out <- cbind(
+  #   snp_data_expdata_pairs[evens,c(1,2,3,4,5,6,7,9)],
+  #   within(data.frame(
+  #     A_Ctrl_Mean <- snp_data_expdata_pairs[evens, "ctrl_mean"],
+  #     A_Exp_Mean <- snp_data_expdata_pairs[evens, "exp_mean"],
+  #     A_log2FC <- snp_data_expdata_pairs[evens, "log2FoldChange"],
+  #     A_log2FC_SE <- -log10(snp_data_expdata_pairs[evens, "lfcSE"]),
+  #     A_logP <- -log10(snp_data_expdata_pairs[evens, "pvalue"]),
+  #     A_logPadj_BH <- -log10(snp_data_expdata_pairs[evens, "padj"]),    #BF Correction
+  #     A_logPadj_BF <- -log10(snp_data_expdata_pairs[evens, "pvalue"]*(nrow(snp_data_expdata_pairs)/2)),    #BF Correction
+  #     B_Ctrl_Mean <- snp_data_expdata_pairs[odds, "ctrl_mean"],
+  #     B_Exp_Mean <- snp_data_expdata_pairs[odds, "exp_mean"],
+  #     B_log2FC <- snp_data_expdata_pairs[odds, "log2FoldChange"],
+  #     B_log2FC_SE <- -log10(snp_data_expdata_pairs[odds, "lfcSE"]),
+  #     B_logP <- -log10(snp_data_expdata_pairs[odds, "pvalue"]),
+  #     B_logPadj_BH <- -log10(snp_data_expdata_pairs[odds, "padj"]),    #BF Correction
+  #     B_logPadj_BF <- -log10(snp_data_expdata_pairs[odds, "pvalue"]*(nrow(snp_data_expdata_pairs)/2))),{   #BF Correction
+  #       A_logP[is.na(A_logP)] <- 0
+  #       A_logP[A_logP == Inf] <- max(A_logP[is.finite(A_logP)])
+  #       A_logPadj_BH[A_logPadj_BH < 0]<-0
+  #       A_logPadj_BH[A_logPadj_BH == Inf] <- max(A_logPadj_BH[is.finite(A_logPadj_BH)])
+  #       A_logPadj_BF[A_logPadj_BF < 0]<-0
+  #       A_logPadj_BF[A_logPadj_BF == Inf] <- max(A_logPadj_BF[is.finite(A_logPadj_BF)])
+  #       B_logP[is.na(B_logP)] <- 0
+  #       B_logP[B_logP == Inf] <- max(B_logP[is.finite(B_logP)])
+  #       B_logPadj_BH[B_logPadj_BH < 0]<-0
+  #       B_logPadj_BH[B_logPadj_BH == Inf] <- max(B_logPadj_BH[is.finite(B_logPadj_BH)])
+  #       B_logPadj_BF[B_logPadj_BF < 0]<-0
+  #       B_logPadj_BF[B_logPadj_BF == Inf] <- max(B_logPadj_BF[is.finite(B_logPadj_BF)])
+  #     }))
   
-  out2 <- out[,c(1:12, 16:19, 23:28)]
-  colnames(out2) <- c("ID", "SNP", "chr", "snp_pos", "ref_allele", "alt_allele", "allele", "strand", "A_Ctrl_Mean", "A_Exp_Mean", "A_log2FC", "A_log2FC_SE", "B_Ctrl_Mean", "B_Exp_Mean", "B_log2FC", "B_log2FC_SE",
-                      "B_logPadj_BF", "B_logPadj_BH", "B_logP", "A_logPadj_BF", "A_logPadj_BH", "A_logP")
+  # out2 <- out[,c(1:12, 16:19, 23:28)]
+  # colnames(out2) <- c("ID", "SNP", "chr", "snp_pos", "ref_allele", "alt_allele", "allele", "strand", "A_Ctrl_Mean", "A_Exp_Mean", "A_log2FC", "A_log2FC_SE", "B_Ctrl_Mean", "B_Exp_Mean", "B_log2FC", "B_log2FC_SE",
+  #                     "B_logPadj_BF", "B_logPadj_BH", "B_logP", "A_logPadj_BF", "A_logPadj_BH", "A_logP")
+  
+  A_Ctrl_Mean <- snp_data_expdata_pairs[evens, "ctrl_mean"]
+  A_Exp_Mean <- snp_data_expdata_pairs[evens, "exp_mean"]
+  A_log2FC <- snp_data_expdata_pairs[evens, "log2FoldChange"]
+  A_log2FC_SE <- -log10(snp_data_expdata_pairs[evens, "lfcSE"])
+  A_logP <- -log10(snp_data_expdata_pairs[evens, "pvalue"])
+  A_logP[is.na(A_logP)] <- 0
+  A_logP[A_logP == Inf] <- max(A_logP[is.finite(A_logP)])
+  A_logPadj_BH <- -log10(snp_data_expdata_pairs[evens, "padj"]) #BH Correction
+  A_logPadj_BH[A_logPadj_BH < 0]<-0
+  A_logPadj_BH[A_logPadj_BH == Inf] <- max(A_logPadj_BH[is.finite(A_logPadj_BH)])
+  A_logPadj_BF <- -log10(snp_data_expdata_pairs[evens, "pvalue"]*(nrow(snp_data_expdata_pairs)/2)) #BF Correction
+  A_logPadj_BF[A_logPadj_BF < 0]<-0
+  A_logPadj_BF[A_logPadj_BF == Inf] <- max(A_logPadj_BF[is.finite(A_logPadj_BF)])
+  B_Ctrl_Mean <- snp_data_expdata_pairs[odds, "ctrl_mean"]
+  B_Exp_Mean <- snp_data_expdata_pairs[odds, "exp_mean"]
+  B_log2FC <- snp_data_expdata_pairs[odds, "log2FoldChange"]
+  B_log2FC_SE <- -log10(snp_data_expdata_pairs[odds, "lfcSE"])
+  B_logP <- -log10(snp_data_expdata_pairs[odds, "pvalue"])
+  B_logP[is.na(B_logP)] <- 0
+  B_logP[B_logP == Inf] <- max(B_logP[is.finite(B_logP)])
+  B_logPadj_BH <- -log10(snp_data_expdata_pairs[odds, "padj"]) #BH Correction
+  B_logPadj_BH[B_logPadj_BH < 0]<-0
+  B_logPadj_BH[B_logPadj_BH == Inf] <- max(B_logPadj_BH[is.finite(B_logPadj_BH)])
+  B_logPadj_BF <- -log10(snp_data_expdata_pairs[odds, "pvalue"]*(nrow(snp_data_expdata_pairs)/2)) #BF Correction
+  B_logPadj_BF[B_logPadj_BF < 0]<-0
+  B_logPadj_BF[B_logPadj_BF == Inf] <- max(B_logPadj_BF[is.finite(B_logPadj_BF)])
+
+  out2 <- cbind(snp_data_expdata_pairs[evens,c(1,2,3,4,5,6,7,9)],A_Ctrl_Mean, A_Exp_Mean, A_log2FC, A_log2FC_SE,A_logP,A_logPadj_BH,A_logPadj_BF,B_Ctrl_Mean,B_Exp_Mean,B_log2FC,B_log2FC_SE,B_logP,B_logPadj_BH,B_logPadj_BF)
+
+  odds_ctrl_means <- rowMeans(snp_data_ctdata_pairs[odds,ctrl_cols])
+  odds_exp_means <- rowMeans(snp_data_ctdata_pairs[odds,exp_cols])
+  even_ctrl_means <- rowMeans(snp_data_ctdata_pairs[evens,ctrl_cols])
+  even_exp_means <- rowMeans(snp_data_ctdata_pairs[evens,exp_cols])
+  
+  odds_ctrl_na <- is.na(odds_ctrl_means)
+  odds_exp_na <- is.na(odds_exp_means)
+  even_ctrl_na <- is.na(even_ctrl_means)
+  even_exp_na <- is.na(even_exp_means)
+  
+  maxes <- c(max(odds_ctrl_means[!odds_ctrl_na]),max(odds_exp_means[!odds_exp_na]),max(even_ctrl_means[!even_ctrl_na]),max(even_exp_means[!even_exp_na]))
+  message(paste0(maxes, collapse = "\t"))
+  message(paste0(snp_data_ctdata_pairs[2,ctrl_cols], collapse = "\t"))
+  message(paste0(snp_data_ctdata_pairs[2,exp_cols], collapse = "\t"))
   
   # Don't try to do the t test for ones with all zeros.
   ignore_idx <- which(rowMeans(snp_data_ctdata_pairs[odds,ctrl_cols]) < 10 | rowMeans(snp_data_ctdata_pairs[odds, exp_cols]) < 10 | 
@@ -496,21 +571,22 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
   
   ratios_list <- list(ratios_A, ratios_B)
   
-  t_pvalue <- sapply(1:nrow(ratios_A), function(i) if(i %in% ignore_idx){NA} else{
+  t_pvalue <- sapply(1:nrow(ratios_A), function(i) if(i %in% ignore_idx){NA} else if(any(duplicated(as.numeric(ratios_A[i,]))) | any(duplicated(as.numeric(ratios_B[i,])))){NA} else{
     t.test(as.numeric(ratios_A[i,]), as.numeric(ratios_B[i,]), var.equal=F, paired=T)$p.value})
-  t_stat <- sapply(1:nrow(ratios_A), function(i) if(i %in% ignore_idx){NA} else{
+  t_stat <- sapply(1:nrow(ratios_A), function(i) if(i %in% ignore_idx){NA} else if(any(duplicated(as.numeric(ratios_A[i,]))) | any(duplicated(as.numeric(ratios_B[i,])))){NA} else{
     t.test(as.numeric(ratios_A[i,]), as.numeric(ratios_B[i,]), var.equal=F, paired=T)$statistic})
-  
+
   out2$LogSkew <- out2$B_log2FC - out2$A_log2FC
   out2$Skew_logP <- ifelse(is.na(t_pvalue), 0, -log10(t_pvalue))
-  
+
   OE_threshold <- -log10(.01)
   is_OE <- out2$A_logPadj_BF >= OE_threshold | out2$B_logPadj_BF >= OE_threshold
-  out2$Skew_logFDR <- rep(NA, dim(out)[1])
+  out2$Skew_logFDR <- rep(NA, dim(out2)[1])
   q_idx <- intersect(which(is_OE), which(!is.na(t_pvalue)))
   out2$Skew_logFDR[q_idx] <- -log10(p.adjust(t_pvalue[q_idx],method="BH"))
   
   return(out2)
+  # return(ratios_list)
 }
 
 ### Expand IDs that denote duplicate oligos in count/DESeq results
@@ -683,9 +759,10 @@ duoLogCor <- function(dds_list, dataCond, filePrefix, subsetList = c()){
   if(length(subsetList) > 0){
     l2fc_df <- subset(l2fc_df, rownames(l2fc_df) %in% subsetList)
   }
-  png(paste0("plots/l2fc_correlation_",filePrefix,".png"))
-  print(ggpairs(l2fc_df, title = paste0("Correlation of log2FoldChange across Cell Types ",filePrefix)), diag = list("naDiag"))
-  dev.off()
+  return(l2fc_df)
+  # png(paste0("plots/l2fc_correlation_",filePrefix,".png"))
+  # print(ggpairs(l2fc_df, title = paste0("Correlation of log2FoldChange across Cell Types ",filePrefix)), diag = list("naDiag"))
+  # dev.off()
 }
 
 ### Plots the log2FoldChange density for each enhancer provided in one plot (currently limited to 5 enhancers) with a subset of oligos 
@@ -697,7 +774,7 @@ duoLogCor <- function(dds_list, dataCond, filePrefix, subsetList = c()){
 ##    negIndc   : String indicating the subset of oligos to pull, string should be present in the oligo name.
 ## OUTPUTS:
 ##    Plots density of log2FoldChange for each enhancer within a celltype, with a subset of oligos based on the oligo name
-duol2fcDensity <- function(dds_list, dataCond, enhList, negIndc, filterList){
+duol2fcDensity <- function(duoAttr, dds_list, dataCond, filePrefix, enhList, negIndc, filterList){
   celltypes <- as.factor(dataCond$condition)
   for(lib in names(dds_list)){
     temp <- dds_list[[lib]]
@@ -709,16 +786,28 @@ duol2fcDensity <- function(dds_list, dataCond, enhList, negIndc, filterList){
       labs <- c()
       indic <- 0
       message(length(filterList[[celltype]]))
-      pdf(paste0("plots/",lib,"_l2fc_",celltype,"_with_",negIndc,"_.pdf"), height=10, width = 10)
+      attr_sub <- duoAttr[which(duoAttr$SNP %in% filterList[[celltype]]$V1),]
+      message(paste0(dim(attr_sub), collapse = "\t"))
+      sub_freq <- as.data.frame(table(attr_sub$SNP))
+      message(paste0(colnames(sub_freq),collapse = "\t"))
+      snp_to_keep <- sub_freq$Var1[which(sub_freq$Freq==10)]
+      message(paste0(head(snp_to_keep), collapse = "\t"))
+      pdf(paste0("plots/",filePrefix,"_",lib,"_l2fc_",celltype,"_with_",negIndc,".pdf"), height=10, width = 10)
       for(e in enhList){
         color_list <- c("red","salmon","blue","dodgerblue","green","limegreen","black","grey", "plum", "palevioletred")
-        labs <- c(labs, e, paste0(e," - ",negIndc))
         indic <- indic +1
         if(enhList[1] %in% oligo_split$col1){
-          enh_l2fc <- res_ct[oligo_split$col1 == e & oligo_split$col2 %in% filterList[[celltype]]$V1,]
-          message(paste0(dim(enh_l2fc), collapse = "\t"))
-          enh_neg_l2fc <- res_ct[oligo_split$col1 == e & grepl(negIndc, rownames(res_ct)),]
-          message(paste0(dim(enh_neg_l2fc), collapse = "\t"))
+          enh_l2fc <- res_ct[oligo_split$col1 == e,]
+          enh_l2fc <- enh_l2fc[rownames(enh_l2fc) %in% attr_sub$ID[which(attr_sub$SNP %in% snp_to_keep)],]
+          negs <- grepl(negIndc, rownames(enh_l2fc))
+          enh_neg_l2fc <- enh_l2fc[negs,]
+          enh_l2fc <- enh_l2fc[!negs,]
+          neg_snps <- attr_sub$SNP[which(attr_sub$ID %in% rownames(enh_neg_l2fc))]
+          ref_snps <- attr_sub$SNP[which(attr_sub$ID %in% rownames(enh_l2fc))]
+          overlap_snps <- intersect(neg_snps,ref_snps)
+          enh_neg_l2fc <- enh_neg_l2fc[rownames(enh_neg_l2fc) %in% attr_sub$ID[attr_sub$SNP %in% overlap_snps],]
+          enh_l2fc <- enh_l2fc[rownames(enh_l2fc) %in% attr_sub$ID[attr_sub$SNP %in% overlap_snps],]
+          labs <- c(labs, paste0(e," (", nrow(enh_l2fc), ")"), paste0(e, " - ",negIndc," (",nrow(enh_neg_l2fc),")"))
           if(indic == 1){
             plot(density(enh_l2fc$log2FoldChange, na.rm=T), xlim=c(-7,9), ylim=c(0,1), col=color_list[indic], main=paste0("Density of enhancers over ", celltype))
             lines(density(enh_neg_l2fc$log2FoldChange, na.rm=T), xlim=c(-7,9), col=color_list[2*indic])
@@ -730,7 +819,16 @@ duol2fcDensity <- function(dds_list, dataCond, enhList, negIndc, filterList){
         }
         if(enhList[1] %in% oligo_split$col2){
           enh_l2fc <- res_ct[oligo_split$col2 == e & oligo_split$col1 %in% filterList[[celltype]]$V1,]
-          enh_neg_l2fc <- res_ct[oligo_split$col2 ==e & grepl(negIndc, rownames(res_ct)),]
+          enh_l2fc <- enh_l2fc[rownames(enh_l2fc) %in% attr_sub$ID[which(attr_sub$SNP %in% snp_to_keep)],]
+          negs <- grepl(negIndc, rownames(enh_l2fc))
+          enh_neg_l2fc <- enh_l2fc[negs,]
+          enh_l2fc <- enh_l2fc[!negs,]
+          neg_snps <- attr_sub$SNP[which(attr_sub$ID %in% rownames(enh_neg_l2fc))]
+          ref_snps <- attr_sub$SNP[which(attr_sub$ID %in% rownames(enh_l2fc))]
+          overlap_snps <- intersect(neg_snps,ref_snps)
+          enh_neg_l2fc <- enh_neg_l2fc[rownames(enh_neg_l2fc) %in% attr_sub$ID[attr_sub$SNP %in% overlap_snps],]
+          enh_l2fc <- enh_l2fc[rownames(enh_l2fc) %in% attr_sub$ID[attr_sub$SNP %in% overlap_snps],]
+          labs <- c(labs, paste0(e," (", nrow(enh_l2fc), ")"), paste0(e, " - ",negIndc," (",nrow(enh_neg_l2fc),")"))
           if(indic == 1){
             plot(density(enh_l2fc$log2FoldChange, na.rm=T), xlim=c(-7,9), ylim=c(0,1), col=color_list[indic], main=paste0("Density of enhancers over ", celltype))
             lines(density(enh_neg_l2fc$log2FoldChange, na.rm=T), xlim=c(-7,9), col=color_list[2*indic])
@@ -749,4 +847,31 @@ duol2fcDensity <- function(dds_list, dataCond, enhList, negIndc, filterList){
       dev.off()
     }
   }
+}
+
+
+encodeOut <- function(resOut){
+  positions <- colsplit(resOut$pos, "-", names = c("chromStart", "chromStop"))
+  for(oligo in 1:nrow(positions)){
+    if(is.na(positions$chromStart[oligo])==F & is.na(positions$chromStop[oligo])==F) next
+    if(is.na(positions$chromStart[oligo])==T & is.na(positions$chromStop[oligo])==T){
+      positions$chromStart[oligo] <- "."
+      positions$chromStop[oligo] <- "."
+    }
+    if(is.na(positions$chromStart[oligo])==F & is.na(positions$chromStop[oligo])==T){
+      positions$chromStop[oligo] <- positions$chromStart[oligo]
+      positions$chromStart[oligo] <- as.integer(positions$chromStart[oligo]) - 1
+    }
+  }
+  foldChange <- 2^resOut$log2FoldChange
+  negLogP <- -log10(resOut$pvalue)
+  negLogFDR <- -log10(resOut$padj)
+  chrom <- paste("chr",resOut$chr, sep = "")
+  score <- rep(".", length(chrom))
+  plasMean <- resOut$ctrl_mean
+  message(length(plasMean))
+  expMean <- resOut$exp_mean
+  message(paste0(length(chrom),length(positions), length(resOut$ID), length(score), length(foldChange), length(plasMean), length(expMean), length(negLogP), length(negLogFDR), collapse="\t"))
+  ENCODEform <- cbind(chrom, positions, resOut$ID, score, foldChange, plasMean, expMean, negLogP, negLogFDR)
+  return(ENCODEform)
 }
