@@ -36,7 +36,7 @@ duoAttr <- function(duoAttr, enhList = c()){
 ## OUTPUTS:
 ##    counts_oligo: oligo level counts table with plasmid mean and number of barcodes for each oligo
 duoStats <- function(dataCount,dataCond){
-  plmd_counts <- dataCount[,c("Oligo",rownames(dataCond)[as.factor(dataCond$condition)=="DNA"])]
+  plmd_counts <- dataCount[,c("Oligo",rownames(dataCond)[which(dataCond$condition=="DNA")])]
   message(class(plmd_counts[,colnames(plmd_counts)!="Oligo"]))
   BCSum <- as.data.frame(table(plmd_counts$Oligo[rowMeans(as.matrix(plmd_counts[,colnames(plmd_counts)!="Oligo"])) > 0]))
   message("set column names")
@@ -188,7 +188,7 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
   `%notin%` <- Negate(`%in%`)
   lib_list <- duoPrep(dataCount,dataCond, run, namesList, libExcl)
   dataCond$condition <- as.factor(dataCond$condition)
-  silencer_ehancer_split <- colsplit(duoAttr$ID, "\\^", names = c("enhancer","silencer"))
+  silencer_enhancer_split <- colsplit(duoAttr$ID, "\\^", names = c("enhancer","silencer"))
   num_enh <- length(unique(silencer_enhancer_split$enhancer))
   message(num_enh)
   dds_list <- list()
@@ -367,6 +367,22 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
       message("Writing T-Test Results Files")
       outA[[celltype]]<-cellSpecificTtest(duoAttr, norm_exp, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols, n=num_enh, altRef=T)
       write.table(outA[[celltype]],paste0("results/", filePrefix, "_", celltype, "_emVAR.out"), row.names=F, col.names=T, sep="\t", quote=F)
+      
+      message("Writing bed File")
+      full_bed_outputA<-merge(duoAttr, as.matrix(dups_output),by.x="ID",by.y="row.names",all.x=TRUE,no.dups=FALSE)
+      #printbed<-full_bed_outputA[,c("chr","start","stop","ID","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","cigar","md-tag","project")]    
+      printbed<-full_bed_outputA[,c("chr","start","stop","ID","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","project")]        
+      printbed$score<-"."
+      #printbed<-printbed[,c("chr","start","stop","ID","score","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","cigar","md-tag","project")]      
+      #colnames(printbed)<-c("chr","start","stop","id","score","strand","log2fc","input-count","output-count","log10pval","log10fdr","lfc-se","cigar","md-tag","project")
+      printbed<-printbed[,c("chr","start","stop","ID","score","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","project")]      
+      colnames(printbed)<-c("chr","start","stop","id","score","strand","log2fc","input-count","output-count","log10pval","log10fdr","lfc-se","project")
+      printbed$strand[printbed$strand=="fwd"]="+"
+      printbed$strand[printbed$strand=="rev"]="-"
+      printbed$log10pval=-log10(printbed$log10pval)
+      printbed$log10fdr=-log10(printbed$log10fdr)
+      
+      write.table(printbed,paste0("results/",filePrefix,"_",celltype,".bed"),row.names=FALSE,col.names=TRUE,sep="\t",quote=FALSE)
     }
   }
   
@@ -434,14 +450,7 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
   snp_data$comb <- paste(snp_data$SNP,"_",snp_data$window,"_",snp_data$strand,"_",snp_data$haplotype,sep="")
   tmp_ct <- as.data.frame(table(as.character(snp_data$comb)))
   
-  message(paste0(dim(tmp_ct), collapse = "\t"))
-  message(paste0(colnames(tmp_ct), collapse = "\t"))
-  message(paste0(head(tmp_ct[,1]), collapse = "\t"))
-  
   snp_data_pairs <- snp_data[snp_data$comb %in% tmp_ct[tmp_ct$Freq==n*2,]$Var1,]
-  
-  message(nrow(snp_data))
-  message(nrow(snp_data_pairs))
   
   snp_data_rejected <- snp_data[snp_data$comb %in% tmp_ct[tmp_ct$Freq!=n*2,]$Var1,]
   
@@ -450,18 +459,10 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
   snp_data_expdata_pairs <- merge(snp_data_pairs,dups_output, by.x="ID", by.y="row.names", all.x=T, no.dups=F)
   snp_data_expdata_pairs <- snp_data_expdata_pairs[order(snp_data_expdata_pairs$SNP, snp_data_expdata_pairs$window, snp_data_expdata_pairs$allele),]
   
-  # if(altRef==T){
-  #   evens <- c(seq(6,nrow(snp_data_pairs),by=10),seq(7,nrow(snp_data_pairs),by=10), seq(8, nrow(snp_data_pairs),by=10),seq(9,nrow(snp_data_pairs),by=10),seq(10,nrow(snp_data_pairs),by=10))
-  #   odds <- c(seq(1,nrow(snp_data_pairs),by=10),seq(2,nrow(snp_data_pairs),by=10), seq(3, nrow(snp_data_pairs),by=10),seq(4,nrow(snp_data_pairs),by=10),seq(5,nrow(snp_data_pairs),by=10))
-  # }else{  
-  #   evens <- c(seq(1,nrow(snp_data_pairs),by=10),seq(2,nrow(snp_data_pairs),by=10), seq(3, nrow(snp_data_pairs),by=10),seq(4,nrow(snp_data_pairs),by=10),seq(5,nrow(snp_data_pairs),by=10))
-  #   odds <- c(seq(6,nrow(snp_data_pairs),by=10),seq(7,nrow(snp_data_pairs),by=10), seq(8, nrow(snp_data_pairs),by=10),seq(9,nrow(snp_data_pairs),by=10),seq(10,nrow(snp_data_pairs),by=10))
-  # }
-  
   if(altRef==T){
     evens <- c()
     odds <- c()
-    for(i in (n+1):2*n){
+    for(i in (n+1):(2*n)){
       evens <- c(evens, seq(i, nrow(snp_data_pairs),by=n*2))
     }
     for(i in 1:n){
@@ -471,46 +472,12 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
     for(i in 1:n){
       evens <- c(evens, seq(i, nrow(snp_data_pairs),by=n*2))
     }
-    for(i in (n+1):2*n){
+    for(i in (n+1):(2*n)){
       odds <- c(odds, seq(i, nrow(snp_data_pairs), by=n*2))
     }
   }
   
-  # out <- cbind(
-  #   snp_data_expdata_pairs[evens,c(1,2,3,4,5,6,7,9)],
-  #   within(data.frame(
-  #     A_Ctrl_Mean <- snp_data_expdata_pairs[evens, "ctrl_mean"],
-  #     A_Exp_Mean <- snp_data_expdata_pairs[evens, "exp_mean"],
-  #     A_log2FC <- snp_data_expdata_pairs[evens, "log2FoldChange"],
-  #     A_log2FC_SE <- -log10(snp_data_expdata_pairs[evens, "lfcSE"]),
-  #     A_logP <- -log10(snp_data_expdata_pairs[evens, "pvalue"]),
-  #     A_logPadj_BH <- -log10(snp_data_expdata_pairs[evens, "padj"]),    #BF Correction
-  #     A_logPadj_BF <- -log10(snp_data_expdata_pairs[evens, "pvalue"]*(nrow(snp_data_expdata_pairs)/2)),    #BF Correction
-  #     B_Ctrl_Mean <- snp_data_expdata_pairs[odds, "ctrl_mean"],
-  #     B_Exp_Mean <- snp_data_expdata_pairs[odds, "exp_mean"],
-  #     B_log2FC <- snp_data_expdata_pairs[odds, "log2FoldChange"],
-  #     B_log2FC_SE <- -log10(snp_data_expdata_pairs[odds, "lfcSE"]),
-  #     B_logP <- -log10(snp_data_expdata_pairs[odds, "pvalue"]),
-  #     B_logPadj_BH <- -log10(snp_data_expdata_pairs[odds, "padj"]),    #BF Correction
-  #     B_logPadj_BF <- -log10(snp_data_expdata_pairs[odds, "pvalue"]*(nrow(snp_data_expdata_pairs)/2))),{   #BF Correction
-  #       A_logP[is.na(A_logP)] <- 0
-  #       A_logP[A_logP == Inf] <- max(A_logP[is.finite(A_logP)])
-  #       A_logPadj_BH[A_logPadj_BH < 0]<-0
-  #       A_logPadj_BH[A_logPadj_BH == Inf] <- max(A_logPadj_BH[is.finite(A_logPadj_BH)])
-  #       A_logPadj_BF[A_logPadj_BF < 0]<-0
-  #       A_logPadj_BF[A_logPadj_BF == Inf] <- max(A_logPadj_BF[is.finite(A_logPadj_BF)])
-  #       B_logP[is.na(B_logP)] <- 0
-  #       B_logP[B_logP == Inf] <- max(B_logP[is.finite(B_logP)])
-  #       B_logPadj_BH[B_logPadj_BH < 0]<-0
-  #       B_logPadj_BH[B_logPadj_BH == Inf] <- max(B_logPadj_BH[is.finite(B_logPadj_BH)])
-  #       B_logPadj_BF[B_logPadj_BF < 0]<-0
-  #       B_logPadj_BF[B_logPadj_BF == Inf] <- max(B_logPadj_BF[is.finite(B_logPadj_BF)])
-  #     }))
-  
-  # out2 <- out[,c(1:12, 16:19, 23:28)]
-  # colnames(out2) <- c("ID", "SNP", "chr", "snp_pos", "ref_allele", "alt_allele", "allele", "strand", "A_Ctrl_Mean", "A_Exp_Mean", "A_log2FC", "A_log2FC_SE", "B_Ctrl_Mean", "B_Exp_Mean", "B_log2FC", "B_log2FC_SE",
-  #                     "B_logPadj_BF", "B_logPadj_BH", "B_logP", "A_logPadj_BF", "A_logPadj_BH", "A_logP")
-  
+
   A_Ctrl_Mean <- snp_data_expdata_pairs[evens, "ctrl_mean"]
   A_Exp_Mean <- snp_data_expdata_pairs[evens, "exp_mean"]
   A_log2FC <- snp_data_expdata_pairs[evens, "log2FoldChange"]
@@ -538,7 +505,7 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
   B_logPadj_BF[B_logPadj_BF < 0]<-0
   B_logPadj_BF[B_logPadj_BF == Inf] <- max(B_logPadj_BF[is.finite(B_logPadj_BF)])
 
-  out2 <- cbind(snp_data_expdata_pairs[evens,c(1,2,3,4,5,6,7,9)],A_Ctrl_Mean, A_Exp_Mean, A_log2FC, A_log2FC_SE,A_logP,A_logPadj_BH,A_logPadj_BF,B_Ctrl_Mean,B_Exp_Mean,B_log2FC,B_log2FC_SE,B_logP,B_logPadj_BH,B_logPadj_BF)
+  out2 <- cbind(snp_data_expdata_pairs[evens,c(1:7,9)],A_Ctrl_Mean, A_Exp_Mean, A_log2FC, A_log2FC_SE,A_logP,A_logPadj_BH,A_logPadj_BF,B_Ctrl_Mean,B_Exp_Mean,B_log2FC,B_log2FC_SE,B_logP,B_logPadj_BH,B_logPadj_BF)
 
   odds_ctrl_means <- rowMeans(snp_data_ctdata_pairs[odds,ctrl_cols])
   odds_exp_means <- rowMeans(snp_data_ctdata_pairs[odds,exp_cols])
@@ -551,10 +518,7 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
   even_exp_na <- is.na(even_exp_means)
   
   maxes <- c(max(odds_ctrl_means[!odds_ctrl_na]),max(odds_exp_means[!odds_exp_na]),max(even_ctrl_means[!even_ctrl_na]),max(even_exp_means[!even_exp_na]))
-  message(paste0(maxes, collapse = "\t"))
-  message(paste0(snp_data_ctdata_pairs[2,ctrl_cols], collapse = "\t"))
-  message(paste0(snp_data_ctdata_pairs[2,exp_cols], collapse = "\t"))
-  
+
   # Don't try to do the t test for ones with all zeros.
   ignore_idx <- which(rowMeans(snp_data_ctdata_pairs[odds,ctrl_cols]) < 10 | rowMeans(snp_data_ctdata_pairs[odds, exp_cols]) < 10 | 
                         is.na(rowMeans(snp_data_ctdata_pairs[odds,ctrl_cols]))  | is.na(rowMeans(snp_data_ctdata_pairs[odds, exp_cols])) | 
@@ -596,6 +560,7 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
 expandDups <- function(output){
   output_orig <- output
   split_row_names <- colsplit(rownames(output), "\\^", names=c("Enhancer","Silencer"))
+  message("adding split rownames")
   output_new <- cbind(split_row_names, output)
   # Identify duplicates, if any exist
   dups <- output_new[grep("\\(.*\\)$",output_new$Silencer),]
@@ -708,10 +673,30 @@ duoCor <- function(dataCount, namesList, dataCond, filePrefix, run, libExcl = c(
   }
   else {
     count_data <- dataCount
+    colnames(count_data) <- c("P_1","P_2","P_3","P_4","G_1","G_2","G_3","G_4","K_1","K_2","K_3","K_4","H_1","H_2","H_3","H_4","S_1","S_2","S_3","S_4")
   }
-  png(paste0("plots/corrleation_",filePrefix,".png"), width = 2000, height = 2000)
-  print(ggpairs(count_data, title = paste0("Correlation ", filePrefix), diag = list("naDiag")))
-  dev.off()
+  # return(count_data)
+  # initial correlation matrix
+  # p1 <- ggpairs(count_data, title = filePrefix, diag = list("naDiag"))
+  # # Colored correlation plot
+  # p2 <- ggcorr(count_data)
+  # 
+  # g2 <- ggplotGrob(p2)
+  # col_vals <- g2$grobs[[6]]$children[[3]]$gp$fill
+  # 
+  # # Add colors as background of upper tiles
+  # idx <- 1
+  # for(k1 in 1:(ncol(count_data)-1)){
+  #   for(k2 in (k1+1):ncol(count_data)){
+  #     plt <- getPlot(p1,k1,k2) + theme(panel.background = element_rect(fill = col_vals[idx], color = "white"),
+  #                                      panel.grid.major=element_line(color = col_vals[idx]))
+  #     p1 <- putPlot(p1,plt,k1,k2)
+  #     idx <- idx+1
+  #   }
+  # }
+  # png(paste0("plots/correlation_plots_colored/",filePrefix,".png"), width = 1024, height = 1024)
+  # print(p1)
+  # dev.off()
   for(celltype in levels(celltypes)){
     message(celltype)
     cell_cols <- subset(dataCond, condition==celltype)
@@ -749,7 +734,7 @@ duoLogCor <- function(dds_list, dataCond, filePrefix, subsetList = c()){
         temp <- as.data.frame(results(dds_list[[lib]], contrast=c("condition",celltype,"DNA"))$log2FoldChange)
         rownames(temp) <- rownames(results(dds_list[[lib]]))
         colnames(temp) <- c(paste0(celltype,"_l2fc"))
-        l2fc_df <- merge(l2fc_df, temp, by="row.names")
+        l2fc_df <- merge(l2fc_df, temp, by="row.names", all=T)
         row_names <- l2fc_df$Row.names
         l2fc_df <- l2fc_df[,-1]
         rownames(l2fc_df) <- row_names
