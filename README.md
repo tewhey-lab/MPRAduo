@@ -4,7 +4,7 @@
 
 ## Before running the pipeline
 
-We have a containerized version of this piepline available [here](https://github.com/tewhey-lab/MPRA_oligo_barcode_pipeline/tree/master/environment)
+We have a containerized version of the environment needed to run this pipeline available [here](https://github.com/tewhey-lab/MPRA_oligo_barcode_pipeline/tree/master/environment)
 
 If you are unable to run the pipeline via a container, then set up your environment as described below:
 
