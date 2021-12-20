@@ -9,7 +9,7 @@ id_len = len(tag_ids)
 file_len = len(tag_files)
 
 if id_len != file_len:
-    raise ValueError("Arrays must have the same size")
+    raise ValueError("ID and Files must be the same length")
 
 i=0
 with open('%s_samples.txt' % id_out,'w') as f:

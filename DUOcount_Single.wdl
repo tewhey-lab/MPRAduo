@@ -3,7 +3,7 @@
 # Requires the same read_b_number as MPRAMatch
 # Requires the parsed file output from MPRAMatch
 
-workflow ReplicateCount {
+workflow DUOcount {
   Array[File] read_a
   Array[String] replicate_id
   Array[Pair[String,File]] id_rep = zip(replicate_id,read_a)
@@ -11,6 +11,8 @@ workflow ReplicateCount {
   File parsed_E
   Int read_b_number
   String id_out
+  String link_E
+  String link_S
   String working_directory
 
   scatter (replicate in id_rep) {
@@ -19,6 +21,8 @@ workflow ReplicateCount {
                           sample_fastq=replicate.right,
                           parsed_S=parsed_S,
                           parsed_E=parsed_E,
+                          link_E=link_E,
+                          link_S=link_S,
                           sample_id=replicate.left
                         }
     call associate { input:
@@ -47,9 +51,11 @@ task prep_counts {
   File parsed_E
   File parsed_S
   String working_directory
+  String link_E
+  String link_S
   String sample_id
   command {
-    python ${working_directory}/library_separation_FLASH2_input.v2.py ${sample_fastq} ${parsed_E} ${parsed_S} ${sample_id}
+    python ${working_directory}/library_separation_FLASH2_input.v2.py ${sample_fastq} ${parsed_E} ${parsed_S} ${sample_id} ${link_E} ${link_S}
     }
   output {
     File out="${sample_id}.match"

@@ -1,8 +1,9 @@
-workflow DuoMatch {
+workflow DUOmatch {
   File read_a
   File read_b
   File reference_fasta
   Int read_b_number
+  Int read_len
   Int seq_min
   String working_directory
   String id_out
@@ -19,6 +20,7 @@ workflow DuoMatch {
   call Flash { input:
                   read_a=read_a,
                   read_b=read_b,
+                  read_len=read_len,
                   id_out=id_out
                 }
   call Pull_Barcodes { input:
@@ -99,9 +101,10 @@ task Flash {
   # Flashing raw fastq files together
   File read_a
   File read_b
+  Int read_len
   String id_out
   command {
-    flash2 -r 150 -f 274 -s 20 -o ${id_out}.merged -t 10 ${read_a} ${read_b}
+    flash2 -r ${read_len} -f 274 -s 20 -o ${id_out}.merged -t 10 ${read_a} ${read_b}
     }
   output {
     File out="${id_out}.merged.extendedFrags.fastq"
@@ -145,7 +148,7 @@ task MiniMap {
   File organized_fasta
   String id_out
   command {
-    minimap2 --for-only -Y --secondary=no -m 10 -n 1 --end-bonus 12 -O 5 -E 1 -k 10 -2K50m --MD --eqx --cs=long -c -a ${reference_fasta} ${organized_fasta} > ${id_out}.merged.match.enh.sam 2> ${id_out}.merged.match.enh.log
+    minimap2 --for-only -Y --secondary=no -m 10 -n 1 -t 30 --end-bonus 12 -O 5 -E 1 -k 10 -2K50m --MD --eqx --cs=long -c -a ${reference_fasta} ${organized_fasta} > ${id_out}.merged.match.enh.sam 2> ${id_out}.merged.match.enh.log
     }
   output {
     File out1="${id_out}.merged.match.enh.sam"

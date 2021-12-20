@@ -2,7 +2,7 @@
 # Requires the same read_b_number as MPRAMatch
 # Requires the parsed file output from MPRAMatch
 
-workflow ReplicateCount {
+workflow DUOcount {
   Array[File] read_a
   Array[File] read_b
   Array[String] replicate_id
@@ -11,8 +11,11 @@ workflow ReplicateCount {
   File parsed_S
   File parsed_E
   Int read_b_number
+  Int read_len
   String flags
   String id_out
+  String link_E
+  String link_S
   String working_directory
 
   scatter (replicate in id_flash) {
@@ -20,6 +23,7 @@ workflow ReplicateCount {
     call Flash { input:
                     read_a=reads.left,
                     read_b=reads.right,
+                    read_len=read_len,
                     id_out=replicate.left
                   }
     call prep_counts { input:
@@ -28,6 +32,8 @@ workflow ReplicateCount {
                           parsed_S=parsed_S,
                           parsed_E=parsed_E,
                           read_b_number=read_b_number,
+                          link_E=link_E,
+                          link_S=link_S,
                           sample_id=replicate.left
                         }
     call associate { input:
@@ -56,9 +62,10 @@ task Flash {
   # Flashing raw fastq files together
   File read_a
   File read_b
+  Int read_len
   String id_out
   command {
-    flash2 -r 150 -f 274 -s 20 -o ${id_out}.merged -t 10 ${read_a} ${read_b}
+    flash2 -r ${read_len} -f 274 -s 20 -o ${id_out}.merged -t 10 ${read_a} ${read_b}
     }
   output {
     File out="${id_out}.merged.extendedFrags.fastq"
@@ -73,8 +80,10 @@ task prep_counts {
   Int read_b_number
   String working_directory
   String sample_id
+  String link_E
+  String link_S
   command {
-    python ${working_directory}/library_separation_FLASH2_input.v2.py ${sample_fastq} ${parsed_E} ${parsed_S} ${sample_id}
+    python ${working_directory}/library_separation_FLASH2_input.v2.py ${sample_fastq} ${parsed_E} ${parsed_S} ${sample_id} ${link_E} ${link_S}
     }
   output {
     File out="${sample_id}.match"

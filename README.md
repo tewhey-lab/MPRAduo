@@ -3,30 +3,52 @@
 *An application of Massively Parallel Reporter Assays (MPRA) to determine the effect of silencers within the genome.*
 
 ## Before running the pipeline
+
+We have a containerized version of this piepline available [here](https://github.com/tewhey-lab/MPRA_oligo_barcode_pipeline/tree/master/environment)
+
+If you are unable to run the pipeline via a container, then set up your environment as described below:
+
 * Have the latest version of Cromwell and Womtool in your workspace
   * `conda install -c bioconda cromwell`
   * `conda install -c bioconda womtool`
 
-* Have modules for FLASH2, minimap2, preseq, pandas, reshape2, and Biopython available
-  * `conda install -c bioconda flash2 `
-  * `conda install -c bioconda minimap2`
-  * `conda install -c bioconda preseq`
-  * `conda install -c anaconda pandas`
-  * `conda install -c anaconda biopython`
-  * `conda install -c r r-reshape2`
+* Have modules for FLASH2, minimap2 (version 2.17), preseq, pandas, reshape2, ggplot2, gridextra, and Biopython available
+  * `conda install -c bioconda  flash2 minimap2=2.17 preseq pandas biopython`
+  * `conda install -c conda-forge r-reshape2 r-ggplot2`
+  * `conda install -c r r-gridextra`
 
 * Make sure all the available scripts (except for the WDL itself) are in a known directory (you will need to provide the path to this directory)
+
+### Suggested directory organization chart:
+```
+	- overall_project/
+		- specific_project/
+			- DUOmatch_output/
+			- DUOcount_output/
+			- DUOmodel_output/
+			- setup/ 	(copy from cloned repository)
+			- fastq/
+			- submission/
+		- cloned_repository/
+			- graphics/
+			- inputs/
+			- scripts/
+			- setup/
+			- DUOcount.wdl
+			- DUOmatch.wdl
+			- README.md
+```
 
 ## Running the WDL
 * Validate the file
   `womtool validate <pipeline_name>.wdl`
 
-  **NB: use the version number for your version of Womtool downloaded above**
+  **NB: use the version number for your version of Womtool downloaded above. The pipelines here should not need to be validated**
 
 * Generate inputs file
   `womtool inputs <pipeline_name>.wdl > <your_projects_name>_inputs.json`
 
-  **NB: see the "Filling in the json" section below for detailed description of input needed**
+  **NB: see the "Filling in the json" section below for detailed description of input needed. A sample input file is provided in this repository for convenience**
 
 * Run the pipeline with your inputs
   `cromwell run <pipeline_name>.wdl --inputs <your_projects_name>_inputs.json`

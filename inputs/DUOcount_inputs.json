@@ -1,0 +1,13 @@
+{
+  "DUOcount.read_a": "Array[File]",
+  "DUOcount.read_b": "Array[File]",
+  "DUOcount.replicate_id": "Array[String]",
+  "DUOcount.parsed_S": "File",
+  "DUOcount.parsed_E": "File",
+  "DUOcount.read_b_number": "Int",
+  "DUOcount.flags": "String",
+  "DUOcount.id_out": "String",
+  "DUOcount.link_E": "String",
+  "DUOcount.link_S": "String",
+  "DUOcount.working_directory": "String"
+}

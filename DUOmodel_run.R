@@ -43,7 +43,7 @@ rownames(condition_table) <- colnames(RESTscreen_14082020)[4:23]
 ## Convert to oligo level count data
 oligo_count_table <- duoStats(count_init,condition_table)
 
-## Get common names to include and filter 
+## Get common names to include and filter
 oligo_names <- duoNames(oligo_count_table,oligo_count_table,libExcl1 = c("E","S"), libExcl2 = c("E","S"),duoOnly = T)
 
 ## Run DESeq analysis

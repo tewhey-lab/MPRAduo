@@ -18,6 +18,8 @@ fastqfile = argv[1]
 dictE = argv[2]
 dictS = argv[3]
 out_dir = argv[4]
+link_E = argv[5]
+link_S = argv[6]
 
 start_time = time.time()
 
@@ -76,8 +78,8 @@ with open("%s.match" % out_dir, "w") as fmatch:
                                         seq_only = str(seq_only)
         # print(seq_only[0:11])
                                         GFP_end = 'AATAATA'
-                                        link_E = 'TCTAGA'
-                                        link_S = 'CTGACT'
+                                        # link_E = 'TCTAGA'
+                                        # link_S = 'CTGACT'
         # Find the end of the GFP read in the sequence line
                                         if GFP_end in seq_only:
                                             match = seq_only.index(GFP_end)
