@@ -104,15 +104,6 @@ An example of the inputs file for each version of the script can be found in the
 
 ```
     {
-      "DUOcount.parsed_E": "/path/to/enhancers/dictionary/file",
-      "DUOcount.parsed_S": "/path/to/silencers/dictionary/file",
-      "DUOcount.read_a": ["/path/to/R1/celltype1/rep1.fastq.gz","/path/to/R1/celltype1/rep2.fastq.gz","/path/to/R1/celltype1/rep3.fastq.gz",...,"/path/to/R1/celltypen/repx.fastq.gz"],
-      "DUOcount.read_b": ["/path/to/R2/celltype1/rep1.fastq.gz","/path/to/R2/celltype1/rep2.fastq.gz","/path/to/R2/celltype1/rep3.fastq.gz",...,"/path/to/R2/celltypen/repx.fastq.gz"], (NB: only required for paired end reads)
-      "DUOcount.replicate_id": ["Celltype1_r1","Celltype1_r2","Celltype1_r3",..."Celltypen_rx"],
-      "DUOcount.read_b_number": "2 (unless for paired read_b above is R1)",
-      "DUOcount.id_out": "Overall_Project_ID",
-      "DUOcount.working_directory": "/path/to/directory/of/scripts"
-      
       "DUOcount.read_a": ["/path/to/R1/celltype1/rep1.fastq.gz","/path/to/R1/celltype1/rep2.fastq.gz","/path/to/R1/celltype1/rep3.fastq.gz",...,"/path/to/R1/celltypen/repx.fastq.gz"],
       "DUOcount.read_b": ["/path/to/R2/celltype1/rep1.fastq.gz","/path/to/R2/celltype1/rep2.fastq.gz","/path/to/R2/celltype1/rep3.fastq.gz",...,"/path/to/R2/celltypen/repx.fastq.gz"],
       "DUOcount.replicate_id": ["Celltype1_r1","Celltype1_r2","Celltype1_r3",..."Celltypen_rx"],
