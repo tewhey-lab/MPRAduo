@@ -62,28 +62,29 @@ The set of pipelines and scripts outlined below are used for matching the oligos
 
 ![Grpaphical Pipeline](graphics/DuoMatch_pipeline.png?raw=true "DuoMatch Graphical Pipeline")
 
-Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (`FLASH2`), and pulls the barcode, oligo and UMI (`map_barcodes_duo.pl`). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (`minimap2`) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (`SAM2MPRA.pl`), and then counted (`Ct_seq.pl`) and parsed (`parse_map.pl`). `preseq`, and `mapping_QC_plots.R` are also run, for the purposes of use in QC. At the end of the pipeline, all files will be moved to an output directory specified in the inputs, to save space on your machine make sure to delete the execution folder for `DuoMatch`.
+Takes read 1 and read 2 of the barcode-oligo sequences, flashes them together (`FLASH2`), and pulls the barcode, oligo and UMI (`map_barcodes_duo.pl`). These sequences are then reorganized into a fasta format, with the barcode and UMI tacked on to the record ID and the oligo sequence as the sequence, and then mapped (`minimap2`) using the oligo order fasta as the reference. The matching oligo ID, barcode, CIGAR information, among other data points are pulled from the SAM output (`SAM2MPRA.pl`), and then counted (`Ct_seq.pl`) and parsed (`parse_map.pl`). `preseq`, and `mapping_QC_plots.R` are also run, for the purposes of use in QC. At the end of the pipeline, all files will be moved to an output directory specified in the inputs, to save space on your machine make sure to delete the `cromwell-execution` folder for `DuoMatch`.
 
 An example inputs file can be found in this repository, and a description of each of the inputs required can be found below:
 
 ```
     {
-      "DuoMatch.read_a": "/full/path/to/read/1.fastq.gz",
-      "DuoMatch.read_b": "/full/path/to/read/2.fastq.gz",
-      "DuoMatch.reference_fasta": "/full/path/to/oligo/order/fasta.fa",
-      "DuoMatch.read_b_number": "2 (unless read b above is read 1)",
-      "DuoMatch.seq_min": "100 (suggested, minimum length of barcode-oligo sequence)",
-      "DuoMatch.working_directory": "/path/to/directory/of/scripts",
-      "DuoMatch.out_directory": "/path/to/directory/to/move/output/files/",
-      "DuoMatch.id_out": "Dictionary_ID_Name",
-      "DuoMatch.link_A_bc": "TCTAGA (6 bases at the barcode end of the linker sequence for Silencers)",
-      "DuoMatch.link_P_bc": "AGTCAG (6 bases at the barcode end of the linker sequence for Enhancers)",
-      "DuoMatch.link_1_bc": "CTAG (4 bases immediately following the UMI - Enhancers)",
-      "DuoMatch.link_2_bc": "CTCA (4 bases immediately following the UMI - Silencers)",
-      "DuoMatch.link_A_oligo": "AGTG (4 bases immediately preceding the oligo - Silencers)",
-      "DuoMatch.link_P_oligo": "AGGG (4 bases immediately preceding the oligo - Enhancers)",
-      "DuoMatch.end_A_oligo": "CGTC (4 bases immediately following the oligo - Silencers)",
-      "DuoMatch.end_P_oligo": "GCAA (4 bases immediately following the oligo - Enhancers)"
+      "DUOmatch.read_a": "/full/path/to/read/1.fastq.gz",
+      "DUOmatch.read_b": "/full/path/to/read/2.fastq.gz",
+      "DUOmatch.reference_fasta": "/full/path/to/oligo/order/fasta.fa",
+      "DUOmatch.read_b_number": "2 (unless read b above is read 1)",
+      "DUOmatch.seq_min": "100 (suggested, minimum length of barcode-oligo sequence)",
+      "DUOmatch.read_len": "200 (minimum length of reads for use in `FLASH2`)",
+      "DUOmatch.working_directory": "/path/to/directory/of/scripts",
+      "DUOmatch.out_directory": "/path/to/directory/to/move/output/files/",
+      "DUOmatch.id_out": "Dictionary_ID_Name",
+      "DUOmatch.link_A_bc": "TCTAGA (6 bases at the barcode end of the linker sequence for Silencers)",
+      "DUOmatch.link_P_bc": "AGTCAG (6 bases at the barcode end of the linker sequence for Enhancers)",
+      "DUOmatch.link_1_bc": "CTAG (4 bases immediately following the UMI - Enhancers)",
+      "DUOmatch.link_2_bc": "CTCA (4 bases immediately following the UMI - Silencers)",
+      "DUOmatch.link_A_oligo": "AGTG (4 bases immediately preceding the oligo - Silencers)",
+      "DUOmatch.link_P_oligo": "AGGG (4 bases immediately preceding the oligo - Enhancers)",
+      "DUOmatch.end_A_oligo": "CGTC (4 bases immediately following the oligo - Silencers)",
+      "DUOmatch.end_P_oligo": "GCAA (4 bases immediately following the oligo - Enhancers)"
     }
 ```
 
@@ -103,14 +104,18 @@ An example of the inputs file for each version of the script can be found in the
 
 ```
     {
-      "ReplicateCount.parsed_E": "/path/to/enhancers/dictionary/file",
-      "ReplicateCount.parsed_S": "/path/to/silencers/dictionary/file",
-      "ReplicateCount.read_a": ["/path/to/R1/celltype1/rep1.fastq.gz","/path/to/R1/celltype1/rep2.fastq.gz","/path/to/R1/celltype1/rep3.fastq.gz",...,"/path/to/R1/celltypen/repx.fastq.gz"],
-      "ReplicateCount.read_b": ["/path/to/R2/celltype1/rep1.fastq.gz","/path/to/R2/celltype1/rep2.fastq.gz","/path/to/R2/celltype1/rep3.fastq.gz",...,"/path/to/R2/celltypen/repx.fastq.gz"], (NB: only required for paired end reads)
-      "ReplicateCount.replicate_id": ["Celltype1_r1","Celltype1_r2","Celltype1_r3",..."Celltypen_rx"],
-      "ReplicateCount.read_b_number": "2 (unless for paired read_b above is R1)",
-      "ReplicateCount.id_out": "Overall_Project_ID",
-      "ReplicateCount.working_directory": "/path/to/directory/of/scripts"
+      "DUOcount.read_a": ["/path/to/R1/celltype1/rep1.fastq.gz","/path/to/R1/celltype1/rep2.fastq.gz","/path/to/R1/celltype1/rep3.fastq.gz",...,"/path/to/R1/celltypen/repx.fastq.gz"],
+      "DUOcount.read_b": ["/path/to/R2/celltype1/rep1.fastq.gz","/path/to/R2/celltype1/rep2.fastq.gz","/path/to/R2/celltype1/rep3.fastq.gz",...,"/path/to/R2/celltypen/repx.fastq.gz"],
+      "DUOcount.replicate_id": ["Celltype1_r1","Celltype1_r2","Celltype1_r3",..."Celltypen_rx"],
+      "DUOcount.parsed_S": "/path/to/silencers/dictionary/file",
+      "DUOcount.parsed_E": "/path/to/enhancers/dictionary/file",
+      "DUOcount.read_b_number": "2 (unless for paired read_b above is R1)",
+      "DUOcount.read_len": "20  (minimum length of reads for use in `FLASH2`)",
+      "DUOcount.flags": "String",
+      "DUOcount.id_out": "Overall_Project_ID",
+      "DUOcount.link_E": "TCTAGA",
+      "DUOcount.link_S": "CTGACT",
+      "DUOcount.working_directory": "/path/to/directory/of/scripts"
     }
 ```
 
