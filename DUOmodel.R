@@ -373,11 +373,11 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
       message("Writing bed File")
       full_bed_outputA<-merge(duoAttr, as.matrix(dups_output),by.x="ID",by.y="row.names",all.x=TRUE,no.dups=FALSE)
       #printbed<-full_bed_outputA[,c("chr","start","stop","ID","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","cigar","md-tag","project")]    
-      printbed<-full_bed_outputA[,c("chr","start","stop","ID","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","project")]        
+      printbed<-full_bed_outputA[,c("chr","start","stop","ID","strand","log2FoldChange","ctrl_mean","exp_mean","pvalue","padj","lfcSE","project")]        
       printbed$score<-"."
       #printbed<-printbed[,c("chr","start","stop","ID","score","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","cigar","md-tag","project")]      
       #colnames(printbed)<-c("chr","start","stop","id","score","strand","log2fc","input-count","output-count","log10pval","log10fdr","lfc-se","cigar","md-tag","project")
-      printbed<-printbed[,c("chr","start","stop","ID","score","strand","log2FoldChange","Ctrl.Mean","Exp.Mean","pvalue","padj","lfcSE","project")]      
+      printbed<-printbed[,c("chr","start","stop","ID","score","strand","log2FoldChange","ctrl_mean","exp_mean","pvalue","padj","lfcSE","project")]      
       colnames(printbed)<-c("chr","start","stop","id","score","strand","log2fc","input-count","output-count","log10pval","log10fdr","lfc-se","project")
       printbed$strand[printbed$strand=="fwd"]="+"
       printbed$strand[printbed$strand=="rev"]="-"
