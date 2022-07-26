@@ -7,7 +7,7 @@
 library(dplyr)
 library(tibble)
 library(DESeq2)
-library(preprocessCore)
+# library(preprocessCore)
 library(reshape2)
 library(GGally)
 
@@ -184,7 +184,7 @@ duoPrep <- function(dataCount, dataCond, run, namesList, libExcl = c()){
 ##    negListS  : negative controls for the silencer library
 ## OUTPUTS:
 ##    dds_list  : DESeqDataSet for the given run with each library an element of the list
-duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, libExcl=c(), negListS = c(), negListE = c(), filterPost = F){
+duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, libExcl=c(), negListS = c(), negListE = c(), filterPost = F,tTest=T){
   `%notin%` <- Negate(`%in%`)
   lib_list <- duoPrep(dataCount,dataCond, run, namesList, libExcl)
   dataCond$condition <- as.factor(dataCond$condition)
@@ -364,9 +364,11 @@ duoSeq <- function(duoAttr, dataCount, dataCond, run, filePrefix, namesList, lib
       full_output[[celltype]] <- results_out
       write.table(results_out, file=paste0("results/",filePrefix,"_",celltype,"_results.run",run,".txt"), row.names=F, col.names=T, sep='\t', quote=F)
 
-      message("Writing T-Test Results Files")
-      outA[[celltype]]<-cellSpecificTtest(duoAttr, norm_exp, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols, n=num_enh, altRef=T)
-      write.table(outA[[celltype]],paste0("results/", filePrefix, "_", celltype, "_emVAR.out"), row.names=F, col.names=T, sep="\t", quote=F)
+      if(tTest==T){
+        message("Writing T-Test Results Files")
+        outA[[celltype]]<-cellSpecificTtest(duoAttr, norm_exp, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols, n=num_enh, altRef=T)
+        write.table(outA[[celltype]],paste0("results/", filePrefix, "_", celltype, "_emVAR.out"), row.names=F, col.names=T, sep="\t", quote=F)
+      }
       
       message("Writing bed File")
       full_bed_outputA<-merge(duoAttr, as.matrix(dups_output),by.x="ID",by.y="row.names",all.x=TRUE,no.dups=FALSE)
@@ -444,7 +446,7 @@ duoSig <- function(dds_results, dds_rna, cond_data){
 ##    ctrl_cols       : passed from the dataOut function
 ##    exp_cols        : passed from the dataOut function
 ##    altRef          : Logical, default T indicating sorting by alt/ref, if sorting ref/alt set to F
-cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols,n, altRef = T){
+cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean, exp_mean, ctrl_cols, exp_cols,n, altRef = T, correction="BH", cutoff=0.01, prior=F){
   snp_data <- subset(attributesData,allele=="ref" | allele=="alt")
   snp_data <- snp_data[order(snp_data$SNP),]
   snp_data$comb <- paste(snp_data$SNP,"_",snp_data$window,"_",snp_data$strand,"_",snp_data$haplotype,sep="")
@@ -469,6 +471,8 @@ cellSpecificTtest<-function(attributesData, counts_norm, dups_output, ctrl_mean,
       odds <- c(odds, seq(i, nrow(snp_data_pairs), by=n*2))
     }
   }else{
+    evens <- c()
+    odds <- c()
     for(i in 1:n){
       evens <- c(evens, seq(i, nrow(snp_data_pairs),by=n*2))
     }
@@ -595,58 +599,58 @@ expandDups <- function(output){
 ##    pairsList : List of pairs to normalize against each other (i.e. A_2,A_3)
 ## OUTPUTS:
 ##    dds_norm  : List of lists of DESeq results from each library, first element will be normalized ddsList1 second element will be ddsList2
-duoNorm <- function(ddsList1, ddsList2, dataCond, filePrefix, pairsList = c()){
-  `%notin%` <- Negate(`%in%`)
-  dds_norm1 <- list()
-  dds_norm2 <- list()
-  for(i in 0:((length(pairsList)/2)-1)){
-    pair = 2*i + 1
-    message(pairsList[pair])
-    pair1 <- pairsList[pair]
-    message(pairsList[(pair+1)])
-    pair2 <- pairsList[(pair+1)]
-    
-    dds_res1 <- as.data.frame(results(ddsList1[[pair1]]))
-    dds_res2 <- as.data.frame(results(ddsList2[[pair2]]))
-    
-    ## Normalize log2FoldChange between pair elements, then calculate the factors to adjust the count data by
-    list1_pair1_l2fc <- as.matrix(dds_res1[,2])
-    list2_pair2_l2fc <- as.matrix(dds_res2[,2])
-
-    merged <- cbind(list1_pair1_l2fc, list2_pair2_l2fc)
-    rownames(merged) <- rownames(results(ddsList1[[pair1]]))
-    mergedn <- normalize.quantiles(as.matrix(merged), copy = F)
-    factor1 <- (2^mergedn[,1])/(2^merged[,1])
-    factor2 <- (2^mergedn[,2])/(2^merged[,2])
-    factor1[is.na(factor1)] <- 1
-    factor2[is.na(factor2)] <- 1
-    if(pairsList[pair] != "PinotA_2"){
-      rownames(mergedn) <- rownames(merged)
-    }
-    
-    #Expected log2Fold for testing purposes
-    l2fc1 <- as.data.frame(mergedn[,1])
-    l2fc2 <- as.data.frame(mergedn[,2])
-    
-    if(pairsList[pair] == "PintoA_2"){
-      rownames(l2fc1) <- rownames(results(ddsList1[[pair1]]))
-      rownames(l2fc2) <- rownames(results(ddsList2[[pair2]]))
-    }
-    
-    message("writing tables")
-    write.table(l2fc1, paste0(names(ddsList1[pair1]),"_", filePrefix, "_normalized_log2FoldChange.txt"), col.names = F)
-    write.table(l2fc2, paste0(names(ddsList2[pair2]),"_", filePrefix, "_normalized_log2FoldChange.txt"), col.names = F)
-    
-    dds_res1$log2FoldChange <- l2fc1
-    dds_res2$log2FoldChange <- l2fc2
-    
-    message("adding to list")
-    dds_norm1[[pair1]] <- dds_res1
-    dds_norm2[[pair2]] <- dds_res2
-    
-  }
-  return(list(dds_norm1, dds_norm2))
-}
+# duoNorm <- function(ddsList1, ddsList2, dataCond, filePrefix, pairsList = c()){
+#   `%notin%` <- Negate(`%in%`)
+#   dds_norm1 <- list()
+#   dds_norm2 <- list()
+#   for(i in 0:((length(pairsList)/2)-1)){
+#     pair = 2*i + 1
+#     message(pairsList[pair])
+#     pair1 <- pairsList[pair]
+#     message(pairsList[(pair+1)])
+#     pair2 <- pairsList[(pair+1)]
+#     
+#     dds_res1 <- as.data.frame(results(ddsList1[[pair1]]))
+#     dds_res2 <- as.data.frame(results(ddsList2[[pair2]]))
+#     
+#     ## Normalize log2FoldChange between pair elements, then calculate the factors to adjust the count data by
+#     list1_pair1_l2fc <- as.matrix(dds_res1[,2])
+#     list2_pair2_l2fc <- as.matrix(dds_res2[,2])
+# 
+#     merged <- cbind(list1_pair1_l2fc, list2_pair2_l2fc)
+#     rownames(merged) <- rownames(results(ddsList1[[pair1]]))
+#     mergedn <- normalize.quantiles(as.matrix(merged), copy = F)
+#     factor1 <- (2^mergedn[,1])/(2^merged[,1])
+#     factor2 <- (2^mergedn[,2])/(2^merged[,2])
+#     factor1[is.na(factor1)] <- 1
+#     factor2[is.na(factor2)] <- 1
+#     if(pairsList[pair] != "PinotA_2"){
+#       rownames(mergedn) <- rownames(merged)
+#     }
+#     
+#     #Expected log2Fold for testing purposes
+#     l2fc1 <- as.data.frame(mergedn[,1])
+#     l2fc2 <- as.data.frame(mergedn[,2])
+#     
+#     if(pairsList[pair] == "PintoA_2"){
+#       rownames(l2fc1) <- rownames(results(ddsList1[[pair1]]))
+#       rownames(l2fc2) <- rownames(results(ddsList2[[pair2]]))
+#     }
+#     
+#     message("writing tables")
+#     write.table(l2fc1, paste0(names(ddsList1[pair1]),"_", filePrefix, "_normalized_log2FoldChange.txt"), col.names = F)
+#     write.table(l2fc2, paste0(names(ddsList2[pair2]),"_", filePrefix, "_normalized_log2FoldChange.txt"), col.names = F)
+#     
+#     dds_res1$log2FoldChange <- l2fc1
+#     dds_res2$log2FoldChange <- l2fc2
+#     
+#     message("adding to list")
+#     dds_norm1[[pair1]] <- dds_res1
+#     dds_norm2[[pair2]] <- dds_res2
+#     
+#   }
+#   return(list(dds_norm1, dds_norm2))
+# }
 
 ### Plots the correlation of the overall dataset, as well as within individual celltypes
 ## INPUTS:
@@ -834,29 +838,3 @@ duol2fcDensity <- function(duoAttr, dds_list, dataCond, filePrefix, enhList, neg
   }
 }
 
-
-encodeOut <- function(resOut){
-  positions <- colsplit(resOut$pos, "-", names = c("chromStart", "chromStop"))
-  for(oligo in 1:nrow(positions)){
-    if(is.na(positions$chromStart[oligo])==F & is.na(positions$chromStop[oligo])==F) next
-    if(is.na(positions$chromStart[oligo])==T & is.na(positions$chromStop[oligo])==T){
-      positions$chromStart[oligo] <- "."
-      positions$chromStop[oligo] <- "."
-    }
-    if(is.na(positions$chromStart[oligo])==F & is.na(positions$chromStop[oligo])==T){
-      positions$chromStop[oligo] <- positions$chromStart[oligo]
-      positions$chromStart[oligo] <- as.integer(positions$chromStart[oligo]) - 1
-    }
-  }
-  foldChange <- 2^resOut$log2FoldChange
-  negLogP <- -log10(resOut$pvalue)
-  negLogFDR <- -log10(resOut$padj)
-  chrom <- paste("chr",resOut$chr, sep = "")
-  score <- rep(".", length(chrom))
-  plasMean <- resOut$ctrl_mean
-  message(length(plasMean))
-  expMean <- resOut$exp_mean
-  message(paste0(length(chrom),length(positions), length(resOut$ID), length(score), length(foldChange), length(plasMean), length(expMean), length(negLogP), length(negLogFDR), collapse="\t"))
-  ENCODEform <- cbind(chrom, positions, resOut$ID, score, foldChange, plasMean, expMean, negLogP, negLogFDR)
-  return(ENCODEform)
-}
